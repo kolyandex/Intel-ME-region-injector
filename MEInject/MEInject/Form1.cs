@@ -17,6 +17,7 @@ namespace MEInject
         private byte[] BIOSfile;
         private byte[] MEfile;
         private int BIOS_ME_offset;
+        private string BIOSfilename;
         private static byte _diff = 0x10;
         public Form1()
         {
@@ -31,23 +32,28 @@ namespace MEInject
         {
             var ofd = new OpenFileDialog { Multiselect = false };
             if (ofd.ShowDialog() != DialogResult.OK) return;
+            BIOStextbox.Text = "";
             BIOSfile = File.ReadAllBytes(ofd.FileName);
             var offset = Find(BIOSfile, Mask);
             //MessageBox.Show(offset1.ToString("X") + "<-mask1 mask2->" + (offset2 - 0x10).ToString("X"));
             if (offset == -1)
             {
                 Log("Can't find ME region in file");
+                BIOSfile = null;
                 return;
             }
             offset -= _diff;
             if (offset == 0)
             {
                 Log("Please, open BIOS, not ME");
+                BIOSfile = null;
                 return;
             }
+            BIOSfilename = ofd.SafeFileName;
             BIOS_ME_offset = offset;
             MEoffsetLabel.Text = "ME offset in BIOS: 0x" + BIOS_ME_offset.ToString("X8");
-            Log("BIOS read successful!");
+            BIOSsizeLabel.Text = "BIOS size: 0x" + BIOSfile.Length.ToString("X8");
+            Log("BIOS read successful! " + ofd.SafeFileName);
             BIOStextbox.Text = "First 0x10 bytes ME in BIOS:\n";
             for (int i = 0; i < 32; i++)
             {
@@ -105,27 +111,52 @@ namespace MEInject
 
         private void OpenMEButton_Click(object sender, EventArgs e)
         {
-            MEtextbox.Text = "First 0x10 bytes:\n";
             var ofd = new OpenFileDialog { Multiselect = false };
             if (ofd.ShowDialog() != DialogResult.OK) return;
+            MEtextbox.Text = "";
             MEfile = File.ReadAllBytes(ofd.FileName);
             if (Find(MEfile, Mask) - _diff != 0)
             {
                 Log("It's not valid ME file");
+                MEfile = null;
                 return;
             }
+            MEtextbox.Text = "First 0x10 bytes in ME:\n";
             for (int i = 0; i < 32; i++)
             {
                 if (i % 8 == 0) MEtextbox.Text += "\n";
                 if (i % 4 == 0) MEtextbox.Text += " ";
                 MEtextbox.Text += MEfile[i].ToString("X2") + " ";
             }
-            Log("ME read successful!");
+            MEsizeLabel.Text ="ME size: 0x" + MEfile.Length.ToString("X8");
+            Log("ME read successful! " + ofd.SafeFileName);
         }
 
         void Log(string message)
         {
             DebugTextBox.Text += DateTime.Now + " - " + message + "\n";
         }
+
+        private void SaveButton_Click(object sender, EventArgs e)
+        {
+            if (BIOSfile == null || MEfile == null)
+            {
+                Log("Nothing to save :(");
+                return;
+            }
+            for (int i = 0; i < MEfile.Length; i++)
+            {
+                BIOSfile[i + BIOS_ME_offset] = MEfile[i];
+            }
+
+            var sfd = new SaveFileDialog();
+            sfd.AddExtension = true;
+            sfd.DefaultExt = "bin";
+            sfd.FileName = BIOSfilename.Replace(".bin", string.Empty) + "-new";
+            if (sfd.ShowDialog() != DialogResult.OK) return;
+            File.WriteAllBytes(sfd.FileName, BIOSfile);
+            Log("Saved to " + sfd.FileName);
+        }
+        
     }
 }
