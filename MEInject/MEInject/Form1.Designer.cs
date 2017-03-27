@@ -57,8 +57,11 @@
             // 
             // DebugTextBox
             // 
+            this.DebugTextBox.Cursor = System.Windows.Forms.Cursors.Default;
             resources.ApplyResources(this.DebugTextBox, "DebugTextBox");
             this.DebugTextBox.Name = "DebugTextBox";
+            this.DebugTextBox.ReadOnly = true;
+            this.DebugTextBox.TextChanged += new System.EventHandler(this.DebugTextBox_TextChanged);
             // 
             // OpenMEButton
             // 
@@ -115,6 +118,7 @@
             this.Controls.Add(this.DebugTextBox);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.OpenBIOSButton);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "Form1";
             this.ResumeLayout(false);
             this.PerformLayout();

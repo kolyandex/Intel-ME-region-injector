@@ -90,6 +90,7 @@ namespace MEInject
 
         private void button1_Click(object sender, EventArgs e)
         {
+            return;
             var files = Directory.GetFiles(@"C:\Users\Nick\Google Диск\BIOS\Wistron");
             //var files = Directory.GetFiles(@"C:\Windows\System32");
 
@@ -157,6 +158,13 @@ namespace MEInject
             File.WriteAllBytes(sfd.FileName, BIOSfile);
             Log("Saved to " + sfd.FileName);
         }
-        
+
+        private void DebugTextBox_TextChanged(object sender, EventArgs e)
+        {
+            // set the current caret position to the end
+            DebugTextBox.SelectionStart = DebugTextBox.Text.Length;
+            // scroll it automatically
+            DebugTextBox.ScrollToCaret();
+        }
     }
 }
