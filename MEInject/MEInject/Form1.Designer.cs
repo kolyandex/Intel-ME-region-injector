@@ -46,7 +46,7 @@
             resources.ApplyResources(this.OpenBIOSButton, "OpenBIOSButton");
             this.OpenBIOSButton.Name = "OpenBIOSButton";
             this.OpenBIOSButton.UseVisualStyleBackColor = true;
-            this.OpenBIOSButton.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+            this.OpenBIOSButton.Click += new System.EventHandler(this.OpenBIOSbutton_Click);
             // 
             // button1
             // 

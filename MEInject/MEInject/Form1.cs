@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
-using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -37,7 +33,7 @@ namespace MEInject
 
 
 
-        private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        private void OpenBIOSbutton_Click(object sender, EventArgs e)
         {
             var ofd = new OpenFileDialog { Multiselect = false };
             if (ofd.ShowDialog() != DialogResult.OK) return;
@@ -77,7 +73,7 @@ namespace MEInject
             BIOSsizeLabel.Text = "BIOS size: 0x" + BIOSfile.Length.ToString("X8");
             Log("BIOS read successful! " + ofd.SafeFileName);
             BIOStextbox.Text = "First 0x10 bytes " + _mode + " in BIOS:\n";
-            for (int i = 0; i < 32; i++)
+            for (var i = 0; i < 0x20; i++)
             {
                 if (i % 8 == 0) BIOStextbox.Text += "\n";
                 if (i % 4 == 0) BIOStextbox.Text += " ";
@@ -85,7 +81,73 @@ namespace MEInject
                 BIOStextbox.Text += BIOSfile[i + BIOS_ME_offset].ToString("X2") + " ";
             }
         }
+        private void OpenMEButton_Click(object sender, EventArgs e)
+        {
+            var ofd = new OpenFileDialog { Multiselect = false };
+            if (ofd.ShowDialog() != DialogResult.OK) return;
+            MEtextbox.Text = "";
+            MEfile = File.ReadAllBytes(ofd.FileName);
 
+            if (Find(MEfile, Mask) - _diff != 0)
+            {
+                Log("It's not valid " + _mode + " file");
+                MEfile = null;
+                return;
+            }
+
+            if ((MEfile[0] == 0x00 && _mode == Mode.ME) || (MEfile[0] != 0x00 && _mode == Mode.TXE))
+            {
+                Log("Please, open " + _mode + " file");
+                MEfile = null;
+                return;
+            }
+
+            if (MEfile.Length >= BIOSfile.Length)
+            {
+                Log(_mode + " file is larger then BIOS file!");
+                MEfile = null;
+                return;
+            }
+
+            MEtextbox.Text = "First 0x10 bytes in " + _mode + ":\n";
+
+            for (var i = 0; i < 0x20; i++)
+            {
+                if (i % 8 == 0) MEtextbox.Text += "\n";
+                if (i % 4 == 0) MEtextbox.Text += " ";
+                MEtextbox.Text += MEfile[i].ToString("X2") + " ";
+            }
+            MEsizeLabel.Text = _mode + " size: 0x" + MEfile.Length.ToString("X8");
+            Log(_mode + " read successful! " + ofd.SafeFileName);
+        }
+        private void SaveButton_Click(object sender, EventArgs e)
+        {
+            if (BIOSfile == null || MEfile == null)
+            {
+                Log("Nothing to save :(");
+                return;
+            }
+
+            for (var i = 0; i < MEfile.Length; i++) BIOSfile[i + BIOS_ME_offset] = MEfile[i];
+
+            var sfd = new SaveFileDialog
+            {
+                AddExtension = true,
+                DefaultExt = "bin",
+                FileName = BIOSfilename.Replace(".bin", string.Empty) + "-new"
+            };
+
+            if (sfd.ShowDialog() != DialogResult.OK) return;
+            try
+            {
+                File.WriteAllBytes(sfd.FileName, BIOSfile);
+                Log("Saved to " + sfd.FileName);
+            }
+            catch (Exception exception)
+            {
+                Log(exception.Message);
+            }
+        }
         static int Find(IList<byte> array, IList<byte> mask)
         {
             try
@@ -110,6 +172,11 @@ namespace MEInject
             }
         }
 
+
+
+
+
+
         private void button1_Click(object sender, EventArgs e)
         {
             return;
@@ -131,76 +198,13 @@ namespace MEInject
 
 
         }
-
-        private void OpenMEButton_Click(object sender, EventArgs e)
-        {
-            var ofd = new OpenFileDialog { Multiselect = false };
-            if (ofd.ShowDialog() != DialogResult.OK) return;
-            MEtextbox.Text = "";
-            MEfile = File.ReadAllBytes(ofd.FileName);
-            if (Find(MEfile, Mask) - _diff != 0)
-            {
-                Log("It's not valid " + _mode + " file");
-                MEfile = null;
-                return;
-            }
-
-            if ((MEfile[0] == 0x00 && _mode == Mode.ME) || (MEfile[0] != 0x00 && _mode == Mode.TXE))
-            {
-                Log("Please, open " + _mode + " file");
-                MEfile = null;
-                return;
-            }
-
-            if (MEfile.Length >= BIOSfile.Length)
-            {
-                Log(_mode + " file is larger then BIOS file!");
-                MEfile = null;
-                return;
-            }
-
-            MEtextbox.Text = "First 0x10 bytes in " + _mode + ":\n";
-            for (int i = 0; i < 32; i++)
-            {
-                if (i % 8 == 0) MEtextbox.Text += "\n";
-                if (i % 4 == 0) MEtextbox.Text += " ";
-                MEtextbox.Text += MEfile[i].ToString("X2") + " ";
-            }
-            MEsizeLabel.Text = _mode + " size: 0x" + MEfile.Length.ToString("X8");
-            Log(_mode + " read successful! " + ofd.SafeFileName);
-        }
-
-        void Log(string message)
+        private void Log(string message)
         {
             DebugTextBox.Text += DateTime.Now + " - " + message + "\n";
         }
-
-        private void SaveButton_Click(object sender, EventArgs e)
-        {
-            if (BIOSfile == null || MEfile == null)
-            {
-                Log("Nothing to save :(");
-                return;
-            }
-            for (int i = 0; i < MEfile.Length; i++)
-            {
-                BIOSfile[i + BIOS_ME_offset] = MEfile[i];
-            }
-
-            var sfd = new SaveFileDialog();
-            sfd.AddExtension = true;
-            sfd.DefaultExt = "bin";
-            sfd.FileName = BIOSfilename.Replace(".bin", string.Empty) + "-new";
-            if (sfd.ShowDialog() != DialogResult.OK) return;
-            File.WriteAllBytes(sfd.FileName, BIOSfile);
-            Log("Saved to " + sfd.FileName);
-        }
-
         private void DebugTextBox_TextChanged(object sender, EventArgs e)
         {
-            // set the current caret position to the end
             DebugTextBox.SelectionStart = DebugTextBox.Text.Length;
-            // scroll it automatically
             DebugTextBox.ScrollToCaret();
         }
     }
