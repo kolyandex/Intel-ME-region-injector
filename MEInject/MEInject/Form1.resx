@@ -204,7 +204,7 @@
     <value>5</value>
   </data>
   <data name="OpenMEButton.Text" xml:space="preserve">
-    <value>Open ME</value>
+    <value>Open ME/TXE</value>
   </data>
   <data name="&gt;&gt;OpenMEButton.Name" xml:space="preserve">
     <value>OpenMEButton</value>
@@ -4907,7 +4907,7 @@
 </value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>Intel ME injector</value>
+    <value>Intel ME/TXE injector</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>Form1</value>

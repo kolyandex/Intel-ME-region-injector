@@ -127,6 +127,6 @@
     <value>Save as</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>Intel ME injector</value>
+    <value>Intel ME/TXE injector</value>
   </data>
 </root>
