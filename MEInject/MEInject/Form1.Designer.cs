@@ -33,8 +33,6 @@
             this.button1 = new System.Windows.Forms.Button();
             this.DebugTextBox = new System.Windows.Forms.RichTextBox();
             this.OpenMEButton = new System.Windows.Forms.Button();
-            this.BIOStextbox = new System.Windows.Forms.RichTextBox();
-            this.MEtextbox = new System.Windows.Forms.RichTextBox();
             this.MEoffsetLabel = new System.Windows.Forms.Label();
             this.SaveButton = new System.Windows.Forms.Button();
             this.BIOSsizeLabel = new System.Windows.Forms.Label();
@@ -70,18 +68,6 @@
             this.OpenMEButton.UseVisualStyleBackColor = true;
             this.OpenMEButton.Click += new System.EventHandler(this.OpenMEButton_Click);
             // 
-            // BIOStextbox
-            // 
-            resources.ApplyResources(this.BIOStextbox, "BIOStextbox");
-            this.BIOStextbox.Name = "BIOStextbox";
-            this.BIOStextbox.ReadOnly = true;
-            // 
-            // MEtextbox
-            // 
-            resources.ApplyResources(this.MEtextbox, "MEtextbox");
-            this.MEtextbox.Name = "MEtextbox";
-            this.MEtextbox.ReadOnly = true;
-            // 
             // MEoffsetLabel
             // 
             resources.ApplyResources(this.MEoffsetLabel, "MEoffsetLabel");
@@ -112,8 +98,6 @@
             this.Controls.Add(this.BIOSsizeLabel);
             this.Controls.Add(this.SaveButton);
             this.Controls.Add(this.MEoffsetLabel);
-            this.Controls.Add(this.MEtextbox);
-            this.Controls.Add(this.BIOStextbox);
             this.Controls.Add(this.OpenMEButton);
             this.Controls.Add(this.DebugTextBox);
             this.Controls.Add(this.button1);
@@ -130,8 +114,6 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.RichTextBox DebugTextBox;
         private System.Windows.Forms.Button OpenMEButton;
-        private System.Windows.Forms.RichTextBox BIOStextbox;
-        private System.Windows.Forms.RichTextBox MEtextbox;
         private System.Windows.Forms.Label MEoffsetLabel;
         private System.Windows.Forms.Button SaveButton;
         private System.Windows.Forms.Label BIOSsizeLabel;

@@ -141,7 +141,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;OpenBIOSButton.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>7</value>
   </data>
   <data name="button1.Location" type="System.Drawing.Point, System.Drawing">
     <value>932, 28</value>
@@ -165,7 +165,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;button1.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>6</value>
   </data>
   <data name="DebugTextBox.Font" type="System.Drawing.Font, System.Drawing">
     <value>Courier New, 9.75pt, style=Bold</value>
@@ -192,7 +192,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;DebugTextBox.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>5</value>
   </data>
   <data name="OpenMEButton.Location" type="System.Drawing.Point, System.Drawing">
     <value>268, 12</value>
@@ -216,60 +216,6 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;OpenMEButton.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="BIOStextbox.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Courier New, 9.75pt, style=Bold</value>
-  </data>
-  <data name="BIOStextbox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 78</value>
-  </data>
-  <data name="BIOStextbox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>250, 110</value>
-  </data>
-  <data name="BIOStextbox.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="BIOStextbox.Text" xml:space="preserve">
-    <value />
-  </data>
-  <data name="&gt;&gt;BIOStextbox.Name" xml:space="preserve">
-    <value>BIOStextbox</value>
-  </data>
-  <data name="&gt;&gt;BIOStextbox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RichTextBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;BIOStextbox.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;BIOStextbox.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="MEtextbox.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Courier New, 9.75pt, style=Bold</value>
-  </data>
-  <data name="MEtextbox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>268, 78</value>
-  </data>
-  <data name="MEtextbox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>250, 110</value>
-  </data>
-  <data name="MEtextbox.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="MEtextbox.Text" xml:space="preserve">
-    <value />
-  </data>
-  <data name="&gt;&gt;MEtextbox.Name" xml:space="preserve">
-    <value>MEtextbox</value>
-  </data>
-  <data name="&gt;&gt;MEtextbox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RichTextBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;MEtextbox.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;MEtextbox.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="MEoffsetLabel.AutoSize" type="System.Boolean, mscorlib">

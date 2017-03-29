@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -9,6 +10,7 @@ namespace MEInject
 {
     public partial class Form1 : Form
     {
+        uint MN2_offset;
         private static readonly byte[] Mask = { 0x24, 0x46, 0x50, 0x54 };
         private byte[] BIOSfile;
         private byte[] MEfile;
@@ -28,7 +30,7 @@ namespace MEInject
             Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             InitializeComponent();
             Log("Ready!");
-            OpenMEButton.Enabled = false;
+            //OpenMEButton.Enabled = false;
         }
 
 
@@ -37,8 +39,6 @@ namespace MEInject
         {
             var ofd = new OpenFileDialog { Multiselect = false };
             if (ofd.ShowDialog() != DialogResult.OK) return;
-            BIOStextbox.Text = "";
-            MEtextbox.Text = "";
             MEfile = null;
             BIOSfile = File.ReadAllBytes(ofd.FileName);
             var offset = Find(BIOSfile, Mask);
@@ -72,21 +72,70 @@ namespace MEInject
             MEoffsetLabel.Text = _mode + " offset in BIOS: 0x" + BIOS_ME_offset.ToString("X8");
             BIOSsizeLabel.Text = "BIOS size: 0x" + BIOSfile.Length.ToString("X8");
             Log("BIOS read successful! " + ofd.SafeFileName);
-            BIOStextbox.Text = "First 0x10 bytes " + _mode + " in BIOS:\n";
-            for (var i = 0; i < 0x20; i++)
-            {
-                if (i % 8 == 0) BIOStextbox.Text += "\n";
-                if (i % 4 == 0) BIOStextbox.Text += " ";
-
-                BIOStextbox.Text += BIOSfile[i + BIOS_ME_offset].ToString("X2") + " ";
-            }
         }
         private void OpenMEButton_Click(object sender, EventArgs e)
         {
             var ofd = new OpenFileDialog { Multiselect = false };
             if (ofd.ShowDialog() != DialogResult.OK) return;
-            MEtextbox.Text = "";
             MEfile = File.ReadAllBytes(ofd.FileName);
+
+
+
+            
+            
+            using (var b = new BinaryReader(File.Open(ofd.FileName, FileMode.Open)))
+            {
+                //int currentseek = 0;
+
+                FptPreHeader fptPreHeader;
+
+                GCHandle handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(FptPreHeader))), GCHandleType.Pinned);
+                fptPreHeader = (FptPreHeader)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(FptPreHeader));
+                handle.Free();
+                Log(fptPreHeader.ROMB_Instr_0.ToString());
+
+                //b.BaseStream.Seek(Marshal.SizeOf(typeof(FptPreHeader)), SeekOrigin.Begin);
+
+                FptHeader fptHeader;
+
+                handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(FptHeader))), GCHandleType.Pinned);
+                fptHeader = (FptHeader)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(FptHeader));
+                handle.Free();
+                Log(fptHeader.NumPartitions.ToString());
+
+                //b.BaseStream.Seek(Marshal.SizeOf(typeof(FptHeader)), SeekOrigin.Current);
+
+                var fptEntries = new List<FptEntry>();
+
+                for (int i = 0; i < fptHeader.NumPartitions; i++)
+                {
+                    FptEntry fptEntry;
+                    handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(FptEntry))), GCHandleType.Pinned);
+                    fptEntry = (FptEntry)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(FptEntry));
+                    handle.Free();
+                    Log(new string(fptEntry.Name));
+                    if (new string(fptEntry.Name) == "FTPR")
+                    {
+                        MN2_offset = fptEntry.Offset;
+                        Log(fptEntry.Offset.ToString());
+                    }
+                    //b.BaseStream.Seek(Marshal.SizeOf(typeof(FptEntry)), SeekOrigin.Current);
+                    fptEntries.Add(fptEntry);
+                }
+
+
+                b.BaseStream.Seek(MN2_offset, SeekOrigin.Begin);
+                Log("MN offset " + MN2_offset);
+                Mn2Manifest manifest;
+                handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(Mn2Manifest))), GCHandleType.Pinned);
+                manifest = (Mn2Manifest)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(Mn2Manifest));
+                handle.Free();
+                Log(manifest.Major + "." + manifest.Minor + "." + manifest.Hotfix + "." + manifest.Build);
+            }
+            
+            if (BIOSfile == null) return;
+
+
 
             if (Find(MEfile, Mask) - _diff != 0)
             {
@@ -108,15 +157,7 @@ namespace MEInject
                 MEfile = null;
                 return;
             }
-
-            MEtextbox.Text = "First 0x10 bytes in " + _mode + ":\n";
-
-            for (var i = 0; i < 0x20; i++)
-            {
-                if (i % 8 == 0) MEtextbox.Text += "\n";
-                if (i % 4 == 0) MEtextbox.Text += " ";
-                MEtextbox.Text += MEfile[i].ToString("X2") + " ";
-            }
+            
             MEsizeLabel.Text = _mode + " size: 0x" + MEfile.Length.ToString("X8");
             Log(_mode + " read successful! " + ofd.SafeFileName);
         }
