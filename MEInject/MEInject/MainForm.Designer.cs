@@ -1,6 +1,6 @@
 ﻿namespace MEInject
 {
-    partial class Form1
+    partial class MainForm
     {
         /// <summary>
         /// Обязательная переменная конструктора.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.OpenBIOSButton = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.DebugTextBox = new System.Windows.Forms.RichTextBox();

@@ -1,7 +1,23 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace MEInject
 {
+    class MEFile
+    {
+        internal FptPreHeader FptPreHeader;
+        internal FptHeader FptHeader;
+        internal List<FptEntry> FptEntries;
+        internal List<Mn2Manifest> Mn2Manifests;
+
+        public MEFile()
+        {
+            FptEntries = new List<FptEntry>();
+            Mn2Manifests = new List<Mn2Manifest>();
+        }
+    }
+
+
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct FptPreHeader
     {

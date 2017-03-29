@@ -8,7 +8,7 @@ using System.Windows.Forms;
 
 namespace MEInject
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         uint MN2_offset;
         private static readonly byte[] Mask = { 0x24, 0x46, 0x50, 0x54 };
@@ -25,7 +25,7 @@ namespace MEInject
             TXE
         }
 
-        public Form1()
+        public MainForm()
         {
             Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             InitializeComponent();
@@ -33,7 +33,49 @@ namespace MEInject
             //OpenMEButton.Enabled = false;
         }
 
+        MEFile GetMEFile(Stream stream, uint offset = 0)
+        {
+            using (var b = new BinaryReader(stream))
+            {
+                b.BaseStream.Seek(offset, SeekOrigin.Begin);
+                var meFile = new MEFile();
 
+                var handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(FptPreHeader))), GCHandleType.Pinned);
+                meFile.FptPreHeader = (FptPreHeader)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(FptPreHeader));
+                handle.Free();
+
+                handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(FptHeader))), GCHandleType.Pinned);
+                meFile.FptHeader = (FptHeader)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(FptHeader));
+                handle.Free();
+
+
+
+                for (var i = 0; i < meFile.FptHeader.NumPartitions; i++)
+                {
+                    handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(FptEntry))), GCHandleType.Pinned);
+                    var fptEntry = (FptEntry)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(FptEntry));
+                    handle.Free();
+                    //Log(new string(fptEntry.Name));
+                    if (new string(fptEntry.Name) == "FTPR")
+                    {
+                        MN2_offset = fptEntry.Offset;
+                    }
+                    meFile.FptEntries.Add(fptEntry);
+
+                }
+
+                foreach (var fptEntry in meFile.FptEntries)
+                {
+                    if (fptEntry.Offset == 0xFFFFFFFF) continue;
+                    b.BaseStream.Seek(fptEntry.Offset, SeekOrigin.Begin);
+                    handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(Mn2Manifest))), GCHandleType.Pinned);
+                    var manifest = (Mn2Manifest)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(Mn2Manifest));
+                    meFile.Mn2Manifests.Add(manifest);
+                    handle.Free();
+                }
+                return meFile;
+            }
+        }
 
         private void OpenBIOSbutton_Click(object sender, EventArgs e)
         {
@@ -58,7 +100,7 @@ namespace MEInject
                 OpenMEButton.Enabled = false;
                 return;
             }
-           
+
 
             BIOSfilename = ofd.SafeFileName;
             BIOS_ME_offset = offset;
@@ -79,10 +121,20 @@ namespace MEInject
             if (ofd.ShowDialog() != DialogResult.OK) return;
             MEfile = File.ReadAllBytes(ofd.FileName);
 
+            var meFile = GetMEFile(File.Open(ofd.FileName, FileMode.Open));
 
+            Log(meFile.FptHeader.NumPartitions.ToString());
 
-            
-            
+            foreach (var fptEntry in meFile.FptEntries)
+            {
+                Log(new string(fptEntry.Name));
+            }
+
+            foreach (var manifest in meFile.Mn2Manifests)
+            {
+                Log(new string(manifest.Tag) + " - " + manifest.Major + "." + manifest.Minor + "." + manifest.Hotfix + "." + manifest.Build + " - " + manifest.ModuleVendor.ToString("X4"));
+            }
+            return;
             using (var b = new BinaryReader(File.Open(ofd.FileName, FileMode.Open)))
             {
                 //int currentseek = 0;
@@ -132,7 +184,7 @@ namespace MEInject
                 handle.Free();
                 Log(manifest.Major + "." + manifest.Minor + "." + manifest.Hotfix + "." + manifest.Build);
             }
-            
+
             if (BIOSfile == null) return;
 
 
@@ -157,7 +209,7 @@ namespace MEInject
                 MEfile = null;
                 return;
             }
-            
+
             MEsizeLabel.Text = _mode + " size: 0x" + MEfile.Length.ToString("X8");
             Log(_mode + " read successful! " + ofd.SafeFileName);
         }
