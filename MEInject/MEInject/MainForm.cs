@@ -95,6 +95,48 @@ namespace MEInject
         {
             var ofd = new OpenFileDialog { Multiselect = false };
             if (ofd.ShowDialog() != DialogResult.OK) return;
+
+            var stream = File.Open(ofd.FileName, FileMode.Open);
+            uint me_start;
+            uint me_end;
+
+            stream.Seek(0x14, SeekOrigin.Begin);
+            var flmap0 = new BinaryReader(stream).ReadUInt32();
+            var flmap1 = new BinaryReader(stream).ReadUInt32();
+            var nr = flmap0 >> 24 & 0x7; // 0x3
+            var frba = flmap0 >> 12 & 0xff0; // 0x40
+            var fmba = (flmap1 & 0xff) << 4;
+            if (nr >= 2)
+            {
+                stream.Seek(frba, SeekOrigin.Begin);
+                var flreg0 = new BinaryReader(stream).ReadUInt32();
+                var flreg1 = new BinaryReader(stream).ReadUInt32();
+                var flreg2 = new BinaryReader(stream).ReadUInt32(); // 0x01FF0003
+                var fd_start = (flreg0 & 0x1fff) << 12;
+                var fd_end = flreg0 >> 4 & 0x1fff000 | 0xfff + 1;
+                me_start = (flreg2 & 0x1fff) << 12; // 0x3000
+                me_end = flreg2 >> 4 & 0x1fff000 | 0xfff + 1; 
+                if (me_start >= me_end)
+                {
+                    Log("The ME/TXE region in this image has been disabled");
+                    return;
+                }
+                stream.Seek(me_start + 0x10, SeekOrigin.Begin);
+
+                if (new string(new BinaryReader(stream).ReadChars(4)) != "$FPT")
+                {
+                    Log("The ME/TXE region is corrupted or missing");
+                    return;
+                }
+
+                Log(string.Format("The ME/TXE region goes from {0:X8} to {1:X8}", me_start, me_end));
+
+            }
+
+            return;
+
+
+
             MEfile = null;
             BIOSfile = File.ReadAllBytes(ofd.FileName);
             var offset = Find(BIOSfile, Mask);
