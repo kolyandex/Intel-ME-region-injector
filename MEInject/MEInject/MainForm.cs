@@ -10,7 +10,6 @@ namespace MEInject
 {
     public partial class MainForm : Form
     {
-        uint MN2_offset;
         private static readonly byte[] Mask = { 0x24, 0x46, 0x50, 0x54 };
         private byte[] BIOSfile;
         private byte[] MEfile;
@@ -58,7 +57,7 @@ namespace MEInject
                     //Log(new string(fptEntry.Name));
                     if (new string(fptEntry.Name) == "FTPR")
                     {
-                        MN2_offset = fptEntry.Offset;
+                        //MN2_offset = fptEntry.Offset;
                     }
                     meFile.FptEntries.Add(fptEntry);
 
@@ -67,13 +66,28 @@ namespace MEInject
                 foreach (var fptEntry in meFile.FptEntries)
                 {
                     if (fptEntry.Offset == 0xFFFFFFFF) continue;
-                    b.BaseStream.Seek(fptEntry.Offset, SeekOrigin.Begin);
+                    b.BaseStream.Seek(fptEntry.Offset + offset, SeekOrigin.Begin);
                     handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(Mn2Manifest))), GCHandleType.Pinned);
                     var manifest = (Mn2Manifest)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(Mn2Manifest));
-                    meFile.Mn2Manifests.Add(manifest);
+                    if (new string(manifest.Tag) == "$MN2") meFile.Mn2Manifests.Add(manifest);
                     handle.Free();
                 }
                 return meFile;
+            }
+        }
+
+        void ShowMEfile(MEFile meFile)
+        {
+            Log(meFile.FptHeader.NumPartitions.ToString());
+
+            foreach (var fptEntry in meFile.FptEntries)
+            {
+                Log(new string(fptEntry.Name) + ": " + fptEntry.Offset.ToString("X8"));
+            }
+
+            foreach (var manifest in meFile.Mn2Manifests)
+            {
+                Log(new string(manifest.Tag) + " - " + manifest.Major + "." + manifest.Minor + "." + manifest.Hotfix + "." + manifest.Build);
             }
         }
 
@@ -101,7 +115,9 @@ namespace MEInject
                 return;
             }
 
-
+            var meFile = GetMEFile(File.Open(ofd.FileName, FileMode.Open), (uint)offset);
+            ShowMEfile(meFile);
+            return;
             BIOSfilename = ofd.SafeFileName;
             BIOS_ME_offset = offset;
             _mode = BIOSfile[offset] == 0x00 ? Mode.TXE : Mode.ME;
@@ -123,17 +139,7 @@ namespace MEInject
 
             var meFile = GetMEFile(File.Open(ofd.FileName, FileMode.Open));
 
-            Log(meFile.FptHeader.NumPartitions.ToString());
-
-            foreach (var fptEntry in meFile.FptEntries)
-            {
-                Log(new string(fptEntry.Name));
-            }
-
-            foreach (var manifest in meFile.Mn2Manifests)
-            {
-                Log(new string(manifest.Tag) + " - " + manifest.Major + "." + manifest.Minor + "." + manifest.Hotfix + "." + manifest.Build + " - " + manifest.ModuleVendor.ToString("X4"));
-            }
+            ShowMEfile(meFile);
             return;
             using (var b = new BinaryReader(File.Open(ofd.FileName, FileMode.Open)))
             {
@@ -168,7 +174,7 @@ namespace MEInject
                     Log(new string(fptEntry.Name));
                     if (new string(fptEntry.Name) == "FTPR")
                     {
-                        MN2_offset = fptEntry.Offset;
+                        //MN2_offset = fptEntry.Offset;
                         Log(fptEntry.Offset.ToString());
                     }
                     //b.BaseStream.Seek(Marshal.SizeOf(typeof(FptEntry)), SeekOrigin.Current);
@@ -176,8 +182,8 @@ namespace MEInject
                 }
 
 
-                b.BaseStream.Seek(MN2_offset, SeekOrigin.Begin);
-                Log("MN offset " + MN2_offset);
+                //b.BaseStream.Seek(MN2_offset, SeekOrigin.Begin);
+                //Log("MN offset " + MN2_offset);
                 Mn2Manifest manifest;
                 handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(Mn2Manifest))), GCHandleType.Pinned);
                 manifest = (Mn2Manifest)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(Mn2Manifest));
