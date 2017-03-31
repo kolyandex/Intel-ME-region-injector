@@ -37,6 +37,7 @@
             this.SaveButton = new System.Windows.Forms.Button();
             this.BIOSsizeLabel = new System.Windows.Forms.Label();
             this.MEsizeLabel = new System.Windows.Forms.Label();
+            this.MEinBIOS_ver_label = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // OpenBIOSButton
@@ -90,10 +91,16 @@
             resources.ApplyResources(this.MEsizeLabel, "MEsizeLabel");
             this.MEsizeLabel.Name = "MEsizeLabel";
             // 
-            // Form1
+            // MEinBIOS_ver_label
+            // 
+            resources.ApplyResources(this.MEinBIOS_ver_label, "MEinBIOS_ver_label");
+            this.MEinBIOS_ver_label.Name = "MEinBIOS_ver_label";
+            // 
+            // MainForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.MEinBIOS_ver_label);
             this.Controls.Add(this.MEsizeLabel);
             this.Controls.Add(this.BIOSsizeLabel);
             this.Controls.Add(this.SaveButton);
@@ -103,7 +110,7 @@
             this.Controls.Add(this.button1);
             this.Controls.Add(this.OpenBIOSButton);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Name = "Form1";
+            this.Name = "MainForm";
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -118,6 +125,7 @@
         private System.Windows.Forms.Button SaveButton;
         private System.Windows.Forms.Label BIOSsizeLabel;
         private System.Windows.Forms.Label MEsizeLabel;
+        private System.Windows.Forms.Label MEinBIOS_ver_label;
     }
 }
 
