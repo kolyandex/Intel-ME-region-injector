@@ -11,12 +11,21 @@ namespace MEInject
 {
     public partial class MainForm : Form
     {
-        private static readonly byte[] Mask = { 0x24, 0x46, 0x50, 0x54 };
+        private string _dbFile = "db.dat";
+        private string _MEdir = string.Empty;
+        private List<MEinfo> _meFiles = new List<MEinfo>();
+        private List<string> _validMEfiles;
+
+        private MEinfo BIOS_ME_info;
         private byte[] BIOSfile;
         private byte[] MEfile;
-        private int BIOS_ME_offset;
+
+
+        private uint BIOS_ME_start_offset;
+        private uint BIOS_ME_end_offset;
+
         private string BIOSfilename;
-        private static byte _diff = 0x10;
+        //private static byte _diff = 0x10;
         private Mode _mode;
 
         enum Mode
@@ -25,272 +34,273 @@ namespace MEInject
             TXE
         }
 
+
         public MainForm()
         {
             Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             InitializeComponent();
+        }
+
+        void ClearFields()
+        {
+            MEoffsetLabel.Text = "ME offset in BIOS: -";
+            MEsizeInBIOSLabel.Text = "ME size: -";
+            MEinBIOS_ver_label.Text = "ME version: -";
+            MEsComboBox.Items.Clear();
+            MEsComboBox.Text = string.Empty;
+            _validMEfiles.Clear();
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            _validMEfiles = new List<string>();
+            _MEdir = Properties.Settings.Default.MEdir;
+            LoadDB();
+            if (_MEdir != string.Empty) Text = "Intel ME/TXE injector - " + _MEdir + " - " + _meFiles.Count + " files";
             Log("Ready!");
-            //OpenMEButton.Enabled = false;
+            MEsComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+
         }
 
-        MEFile GetMEFile(Stream stream, uint offset = 0)
+        private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            using (var b = new BinaryReader(stream))
+            SaveDB();
+            Properties.Settings.Default.MEdir = _MEdir;
+            Properties.Settings.Default.Save();
+        }
+
+        void UpdateDB()
+        {
+            var files = GetFileNames(_MEdir);
+            _meFiles.Clear();
+            foreach (var file in files)
             {
-                b.BaseStream.Seek(offset, SeekOrigin.Begin);
-                var meFile = new MEFile();
-
-                var handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(FptPreHeader))), GCHandleType.Pinned);
-                meFile.FptPreHeader = (FptPreHeader)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(FptPreHeader));
-                handle.Free();
-
-                handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(FptHeader))), GCHandleType.Pinned);
-                meFile.FptHeader = (FptHeader)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(FptHeader));
-                handle.Free();
-
-
-
-                for (var i = 0; i < meFile.FptHeader.NumPartitions; i++)
+                try
                 {
-                    handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(FptEntry))), GCHandleType.Pinned);
-                    var fptEntry = (FptEntry)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(FptEntry));
-                    handle.Free();
-                    //Log(new string(fptEntry.Name));
-                    if (new string(fptEntry.Name) == "FTPR")
+                    _meFiles.Add(LoadMEinfo(file));
+                }
+                catch (Exception ex)
+                {
+                    //Log(ex.Message);
+                }
+            }
+            SaveDB();
+            Text = "Intel ME/TXE injector - " + _MEdir + " - " + _meFiles.Count + " files";
+        }
+
+        void SaveDB()
+        {
+            using (Stream writer = new FileStream(_dbFile, FileMode.Create))
+            {
+                var bformatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                bformatter.Serialize(writer, _meFiles);
+            }
+        }
+        private void LoadDB()
+        {
+            if (_MEdir == string.Empty)
+            {
+                MessageBox.Show("Please, specify ME files folder first");
+                var fbd = new FolderBrowserDialog();
+                if (fbd.ShowDialog() != DialogResult.OK)
+                {
+                    Close();
+                    return;
+                }
+                _MEdir = fbd.SelectedPath;
+                Properties.Settings.Default.MEdir = _MEdir;
+                Properties.Settings.Default.Save();
+                UpdateDB();
+            }
+
+            if (!File.Exists(_dbFile))
+            {
+
+                UpdateDB();
+                Text = "Intel ME/TXE injector - " + _MEdir + " - " + _meFiles.Count + " files";
+                return;
+            }
+
+            try
+            {
+                using (Stream stream = File.Open(_dbFile, FileMode.Open))
+                {
+                    var bformatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                    _meFiles = (List<MEinfo>)bformatter.Deserialize(stream);
+                }
+                if (_meFiles.Any(mefile => !File.Exists(mefile.Path))) UpdateDB();
+            }
+
+            catch (Exception exception)
+            {
+                Log(exception.Message + "");
+            }
+        }
+
+        MEinfo GetMEFileInfo(Stream stream, string path, uint startoffset = 0, uint endoffset = 0)
+        {
+            stream.Seek(startoffset, SeekOrigin.Begin);
+            var meinfo = new MEinfo();
+
+            var handle = GCHandle.Alloc(new BinaryReader(stream).ReadBytes(Marshal.SizeOf(typeof(FptPreHeader))), GCHandleType.Pinned);
+            var fptPreHeader = (FptPreHeader)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(FptPreHeader));
+            handle.Free();
+
+            handle = GCHandle.Alloc(new BinaryReader(stream).ReadBytes(Marshal.SizeOf(typeof(FptHeader))), GCHandleType.Pinned);
+            var fptHeader = (FptHeader)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(FptHeader));
+            handle.Free();
+
+            var fptEntries = new List<FptEntry>();
+            for (var i = 0; i < fptHeader.NumPartitions; i++)
+            {
+                handle = GCHandle.Alloc(new BinaryReader(stream).ReadBytes(Marshal.SizeOf(typeof(FptEntry))), GCHandleType.Pinned);
+                var fptEntry = (FptEntry)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(FptEntry));
+                handle.Free();
+                fptEntries.Add(fptEntry);
+            }
+
+            var mn2Manifests = new List<Mn2Manifest>();
+            foreach (var fptEntry in fptEntries.Where(fptEntry => (fptEntry.Flags & 0x00FF) == 0x80))
+            {
+                stream.Seek(fptEntry.Offset + startoffset, SeekOrigin.Begin);
+                handle = GCHandle.Alloc(new BinaryReader(stream).ReadBytes(Marshal.SizeOf(typeof(Mn2Manifest))), GCHandleType.Pinned);
+                mn2Manifests.Add((Mn2Manifest)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(Mn2Manifest)));
+                handle.Free();
+            }
+
+            var manifest = mn2Manifests.First();
+
+            meinfo.Size = endoffset == 0 ? (uint)stream.Length : endoffset - startoffset;
+            meinfo.Path = path;
+            meinfo.Major = manifest.Major;
+            meinfo.Minor = manifest.Minor;
+            meinfo.Hotfix = manifest.Hotfix;
+            meinfo.Build = manifest.Build;
+            return meinfo;
+        }
+
+        private MEinfo LoadMEinfo(string path)
+        {
+            var stream = File.Open(path, FileMode.Open);
+            stream.Seek(0x10, SeekOrigin.Begin);
+
+            var magic = new BinaryReader(stream).ReadBytes(4);
+
+            if (magic.SequenceEqual(new byte[] { 0x24, 0x46, 0x50, 0x54 })) // $FPT - ME file
+            {
+                Log("ME file added " + path.SafeFileName());
+                var meinfo = GetMEFileInfo(stream, path);
+                stream.Close();
+                return meinfo;
+            }
+            stream.Close();
+            throw new Exception("Invalid input file " + path.SafeFileName());
+        }
+
+        private void LoadBIOS(string path)
+        {
+            BIOSfile = File.ReadAllBytes(path);
+            var stream = File.Open(path, FileMode.Open);
+            stream.Seek(0x10, SeekOrigin.Begin);
+
+            var magic = new BinaryReader(stream).ReadBytes(4);
+
+            if (magic.SequenceEqual(new byte[] { 0x5A, 0xA5, 0xF0, 0x0F })) // Flas descriptor sign. BIOS file
+            {
+                stream.Seek(0x14, SeekOrigin.Begin);
+                var flmap0 = new BinaryReader(stream).ReadUInt32();
+                var flmap1 = new BinaryReader(stream).ReadUInt32();
+                var nr = flmap0 >> 24 & 0x7;
+                var frba = flmap0 >> 12 & 0xff0;
+                //var fmba = (flmap1 & 0xff) << 4;
+                if (nr >= 2)
+                {
+                    //Log("BIOS image detected");
+                    stream.Seek(frba, SeekOrigin.Begin);
+                    //FLREG0 = Flash Descriptor
+                    //FLREG1 = BIOS
+                    //FLREG2 = ME
+                    var flreg0 = new BinaryReader(stream).ReadUInt32();
+                    var flreg1 = new BinaryReader(stream).ReadUInt32();
+                    var flreg2 = new BinaryReader(stream).ReadUInt32();
+                    //var fd_start = (flreg0 & 0x1fff) << 12;
+                    //var fd_end = flreg0 >> 4 & 0x1fff000 | 0xfff + 1;
+                    BIOS_ME_start_offset = (flreg2 & 0x1fff) << 12;
+                    BIOS_ME_end_offset = flreg2 >> 4 & 0x1fff000 | 0xfff + 1;
+                    if (BIOS_ME_start_offset >= BIOS_ME_end_offset)
                     {
-                        //MN2_offset = fptEntry.Offset;
+                        throw new Exception("The ME/TXE region in this image has been disabled");
                     }
-                    meFile.FptEntries.Add(fptEntry);
+                    stream.Seek(BIOS_ME_start_offset + 0x10, SeekOrigin.Begin);
 
+                    if (new string(new BinaryReader(stream).ReadChars(4)) != "$FPT")
+                    {
+                        throw new Exception("The ME/TXE region is corrupted or missing");
+                    }
+                    Log("BIOS read successful! " + path.SafeFileName());
+                    //Log(path);
+                    //Log(string.Format("The ME/TXE region goes from {0:X8} to {1:X8}", BIOS_ME_start_offset, BIOS_ME_end_offset));
+
+
+
+                    BIOS_ME_info = GetMEFileInfo(stream, path, BIOS_ME_start_offset, BIOS_ME_end_offset);
+
+                    _mode = BIOS_ME_info.Major < 3 ? Mode.TXE : Mode.ME;
+                    MEinBIOS_ver_label.Text = _mode + " version: " + BIOS_ME_info.Major + "." + BIOS_ME_info.Minor + "." +
+                                              BIOS_ME_info.Hotfix + "." + BIOS_ME_info.Build;
+                    MEoffsetLabel.Text = _mode + " offset in BIOS: 0x" + BIOS_ME_start_offset.ToString("X8");
+                    MEsizeInBIOSLabel.Text = _mode + " size: " + (BIOS_ME_end_offset - BIOS_ME_start_offset) + " bytes";
+                    SuitableMEs.Text = "Suitable " + _mode + "s:";
+                    Log("Mode: " + _mode);
+                    //Log(MEinBIOS_ver_label.Text);
+                    MEsComboBox.Items.Clear();
+                    _validMEfiles.Clear();
+                    foreach (var mefile in _meFiles)
+                    {
+                        if (BIOS_ME_info.Major == mefile.Major && BIOS_ME_info.Minor == mefile.Minor &&
+                            BIOS_ME_end_offset - BIOS_ME_start_offset >= mefile.Size)
+                        {
+                            MEsComboBox.Items.Add(mefile.Major + "." + mefile.Minor + "." + mefile.Hotfix + "." + mefile.Build + " - " + mefile.Path.SafeFileName());
+                            _validMEfiles.Add(mefile.Path);
+                        }
+                    }
+                    if (MEsComboBox.Items.Count == 0) MEsComboBox.Items.Add("--none--");
+                    MEsComboBox.SelectedIndex = 0;
                 }
-
-                foreach (var fptEntry in meFile.FptEntries)
-                {
-                    if (fptEntry.Offset == 0xFFFFFFFF) continue;
-                    b.BaseStream.Seek(fptEntry.Offset + offset, SeekOrigin.Begin);
-                    handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(Mn2Manifest))), GCHandleType.Pinned);
-                    var manifest = (Mn2Manifest)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(Mn2Manifest));
-                    if (new string(manifest.Tag) == "$MN2") meFile.Mn2Manifests.Add(manifest);
-                    handle.Free();
-                }
-                return meFile;
+                stream.Close();
+                return;
             }
-        }
-
-        void ShowMEfile(MEFile meFile)
-        {
-            Log(meFile.FptHeader.NumPartitions.ToString());
-
-            foreach (var fptEntry in meFile.FptEntries)
-            {
-                Log(new string(fptEntry.Name) + ": " + fptEntry.Offset.ToString("X8"));
-            }
-
-            foreach (var manifest in meFile.Mn2Manifests)
-            {
-                Log(new string(manifest.Tag) + " - " + manifest.Major + "." + manifest.Minor + "." + manifest.Hotfix + "." + manifest.Build);
-            }
+            stream.Close();
+            ClearFields();
+            BIOSfile = null;
+            throw new Exception("Invalid input file " + path.SafeFileName());
         }
 
         private void OpenBIOSbutton_Click(object sender, EventArgs e)
         {
             var ofd = new OpenFileDialog { Multiselect = false };
             if (ofd.ShowDialog() != DialogResult.OK) return;
-
-            var stream = File.Open(ofd.FileName, FileMode.Open);
-
-            stream.Seek(0x10, SeekOrigin.Begin);
-
-            var magic = new BinaryReader(stream).ReadBytes(4);
-
-            if (!magic.SequenceEqual(new byte[] { 0x5A, 0xA5, 0xF0, 0x0F }))
+            try
             {
-                Log("Invalid flash descriptor signature 0FF0A55Ah!");
-                return;
+                LoadBIOS(ofd.FileName);
+                BIOSfilename = ofd.SafeFileName;
             }
-            uint me_start;
-            uint me_end;
-
-            stream.Seek(0x14, SeekOrigin.Begin);
-            var flmap0 = new BinaryReader(stream).ReadUInt32();
-            var flmap1 = new BinaryReader(stream).ReadUInt32();
-            var nr = flmap0 >> 24 & 0x7; // 0x3
-            var frba = flmap0 >> 12 & 0xff0; // 0x40
-            var fmba = (flmap1 & 0xff) << 4;
-            if (nr >= 2)
+            catch (Exception exception)
             {
-                stream.Seek(frba, SeekOrigin.Begin);
-                //FLREG0 = Flash Descriptor
-                //FLREG1 = BIOS
-                //FLREG2 = ME
-                var flreg0 = new BinaryReader(stream).ReadUInt32();
-                var flreg1 = new BinaryReader(stream).ReadUInt32();
-                var flreg2 = new BinaryReader(stream).ReadUInt32(); // 0x01FF0003
-                var fd_start = (flreg0 & 0x1fff) << 12;
-                var fd_end = flreg0 >> 4 & 0x1fff000 | 0xfff + 1;
-                me_start = (flreg2 & 0x1fff) << 12; // 0x3000
-                me_end = flreg2 >> 4 & 0x1fff000 | 0xfff + 1;
-                if (me_start >= me_end)
-                {
-                    Log("The ME/TXE region in this image has been disabled");
-                    return;
-                }
-                stream.Seek(me_start + 0x10, SeekOrigin.Begin);
-
-                if (new string(new BinaryReader(stream).ReadChars(4)) != "$FPT")
-                {
-                    Log("The ME/TXE region is corrupted or missing");
-                    return;
-                }
-
-                Log(string.Format("The ME/TXE region goes from {0:X8} to {1:X8}", me_start, me_end));
-
-                MEoffsetLabel.Text = _mode + " offset in BIOS: 0x" + me_start.ToString("X8");
-                MEsizeLabel.Text = _mode + " size: " + (me_end - me_start) + " bytes";
-
-                var mefile = GetMEFile(stream, me_start);
-                var manifest = mefile.Mn2Manifests.First();
-                MEinBIOS_ver_label.Text = "ME version: " + manifest.Major + "." + manifest.Minor + "." + manifest.Hotfix + "." + manifest.Build;
-
+                Log(exception.Message);
             }
-
-            return;
-
-
-
-            MEfile = null;
-            BIOSfile = File.ReadAllBytes(ofd.FileName);
-            var offset = Find(BIOSfile, Mask);
-
-            if (offset == -1)
-            {
-                Log("Can't find ME/TXE region in file");
-                BIOSfile = null;
-                OpenMEButton.Enabled = false;
-                return;
-            }
-            offset -= _diff;
-            if (offset == 0)
-            {
-                Log("Please, open BIOS, not ME/TXE");
-                BIOSfile = null;
-                OpenMEButton.Enabled = false;
-                return;
-            }
-
-            var meFile = GetMEFile(File.Open(ofd.FileName, FileMode.Open), (uint)offset);
-            ShowMEfile(meFile);
-            return;
-            BIOSfilename = ofd.SafeFileName;
-            BIOS_ME_offset = offset;
-            _mode = BIOSfile[offset] == 0x00 ? Mode.TXE : Mode.ME;
-
-            Log("Mode: " + _mode);
-
-            OpenMEButton.Enabled = BIOSfile != null;
-            OpenMEButton.Text = "Open " + _mode;
-
-            MEoffsetLabel.Text = _mode + " offset in BIOS: 0x" + BIOS_ME_offset.ToString("X8");
-            BIOSsizeLabel.Text = "BIOS size: 0x" + BIOSfile.Length.ToString("X8");
-            Log("BIOS read successful! " + ofd.SafeFileName);
-        }
-        private void OpenMEButton_Click(object sender, EventArgs e)
-        {
-            var ofd = new OpenFileDialog { Multiselect = false };
-            if (ofd.ShowDialog() != DialogResult.OK) return;
-            MEfile = File.ReadAllBytes(ofd.FileName);
-
-            var meFile = GetMEFile(File.Open(ofd.FileName, FileMode.Open));
-
-            ShowMEfile(meFile);
-            return;
-            using (var b = new BinaryReader(File.Open(ofd.FileName, FileMode.Open)))
-            {
-                //int currentseek = 0;
-
-                FptPreHeader fptPreHeader;
-
-                GCHandle handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(FptPreHeader))), GCHandleType.Pinned);
-                fptPreHeader = (FptPreHeader)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(FptPreHeader));
-                handle.Free();
-                Log(fptPreHeader.ROMB_Instr_0.ToString());
-
-                //b.BaseStream.Seek(Marshal.SizeOf(typeof(FptPreHeader)), SeekOrigin.Begin);
-
-                FptHeader fptHeader;
-
-                handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(FptHeader))), GCHandleType.Pinned);
-                fptHeader = (FptHeader)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(FptHeader));
-                handle.Free();
-                Log(fptHeader.NumPartitions.ToString());
-
-                //b.BaseStream.Seek(Marshal.SizeOf(typeof(FptHeader)), SeekOrigin.Current);
-
-                var fptEntries = new List<FptEntry>();
-
-                for (int i = 0; i < fptHeader.NumPartitions; i++)
-                {
-                    FptEntry fptEntry;
-                    handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(FptEntry))), GCHandleType.Pinned);
-                    fptEntry = (FptEntry)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(FptEntry));
-                    handle.Free();
-                    Log(new string(fptEntry.Name));
-                    if (new string(fptEntry.Name) == "FTPR")
-                    {
-                        //MN2_offset = fptEntry.Offset;
-                        Log(fptEntry.Offset.ToString());
-                    }
-                    //b.BaseStream.Seek(Marshal.SizeOf(typeof(FptEntry)), SeekOrigin.Current);
-                    fptEntries.Add(fptEntry);
-                }
-
-
-                //b.BaseStream.Seek(MN2_offset, SeekOrigin.Begin);
-                //Log("MN offset " + MN2_offset);
-                Mn2Manifest manifest;
-                handle = GCHandle.Alloc(b.ReadBytes(Marshal.SizeOf(typeof(Mn2Manifest))), GCHandleType.Pinned);
-                manifest = (Mn2Manifest)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(Mn2Manifest));
-                handle.Free();
-                Log(manifest.Major + "." + manifest.Minor + "." + manifest.Hotfix + "." + manifest.Build);
-            }
-
-            if (BIOSfile == null) return;
-
-
-
-            if (Find(MEfile, Mask) - _diff != 0)
-            {
-                Log("It's not valid " + _mode + " file");
-                MEfile = null;
-                return;
-            }
-
-            if ((MEfile[0] == 0x00 && _mode == Mode.ME) || (MEfile[0] != 0x00 && _mode == Mode.TXE))
-            {
-                Log("Please, open " + _mode + " file");
-                MEfile = null;
-                return;
-            }
-
-            if (MEfile.Length >= BIOSfile.Length)
-            {
-                Log(_mode + " file is larger then BIOS file!");
-                MEfile = null;
-                return;
-            }
-
-            MEsizeLabel.Text = _mode + " size: 0x" + MEfile.Length.ToString("X8");
-            Log(_mode + " read successful! " + ofd.SafeFileName);
         }
         private void SaveButton_Click(object sender, EventArgs e)
         {
-            if (BIOSfile == null || MEfile == null)
+            if (BIOSfile == null || _validMEfiles.Count == 0)
             {
                 Log("Nothing to save :(");
                 return;
             }
+            MEfile = File.ReadAllBytes(_validMEfiles[MEsComboBox.SelectedIndex]);
 
-            for (var i = 0; i < MEfile.Length; i++) BIOSfile[i + BIOS_ME_offset] = MEfile[i];
+
+            for (var i = 0; i < MEfile.Length; i++) BIOSfile[i + BIOS_ME_start_offset] = MEfile[i];
 
             var sfd = new SaveFileDialog
             {
@@ -336,38 +346,76 @@ namespace MEInject
 
 
 
+        private readonly List<string> _filesList = new List<string>();
+        private List<string> GetFileNames(string path)
+        {
+            _filesList.Clear();
+            FileFinder(path);
+            return _filesList;
+        }
+
+        private void FileFinder(string path)
+        {
+            try
+            {
+                var dirs = Directory.GetDirectories(path);
+                var files = Directory.GetFiles(path);
+                _filesList.AddRange(files);
+                foreach (var dir in dirs)
+                {
+                    FileFinder(dir);
+                }
+            }
+            catch (Exception exception)
+            {
+                Log(exception.Message + " " + path);
+            }
+        }
 
 
 
         private void button1_Click(object sender, EventArgs e)
         {
             return;
-            var files = Directory.GetFiles(@"C:\Users\Nick\Google Диск\BIOS\Wistron");
-            //var files = Directory.GetFiles(@"C:\Windows\System32");
-
-            foreach (var file in files)
+            LoadDB();
+            return;
+            foreach (var file in GetFileNames(@"C:\Users\Nick\Google Диск\BIOS\"))
             {
                 try
                 {
-                    Log(file + " - " + (Find(File.ReadAllBytes(file), Mask) - _diff).ToString("X"));
+                    // LoadFile(file);
                 }
-                catch (Exception ex)
+                catch (Exception exception)
                 {
-                    Log(ex.Message);
+                    //Log(exception.Message);
                 }
-
+                //Log(file);
             }
-
-
         }
         private void Log(string message)
         {
-            DebugTextBox.Text += DateTime.Now + " - " + message + "\n";
+            DebugTextBox.Text += /*DateTime.Now + " - " + */message + "\n";
         }
         private void DebugTextBox_TextChanged(object sender, EventArgs e)
         {
             DebugTextBox.SelectionStart = DebugTextBox.Text.Length;
             DebugTextBox.ScrollToCaret();
+        }
+
+        private void ChangeMEFolderButton_Click(object sender, EventArgs e)
+        {
+            var fbd = new FolderBrowserDialog { SelectedPath = _MEdir };
+            if (fbd.ShowDialog() != DialogResult.OK) return;
+            _MEdir = fbd.SelectedPath;
+            Properties.Settings.Default.MEdir = _MEdir;
+            Properties.Settings.Default.Save();
+            UpdateDB();
+            Text = "Intel ME/TXE injector - " + _MEdir + " - " + _meFiles.Count + " files";
+        }
+
+        private void UpdateDB_Button_Click(object sender, EventArgs e)
+        {
+            UpdateDB();
         }
     }
 }

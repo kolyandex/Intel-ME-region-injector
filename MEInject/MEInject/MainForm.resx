@@ -141,7 +141,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;OpenBIOSButton.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>10</value>
   </data>
   <data name="button1.Location" type="System.Drawing.Point, System.Drawing">
     <value>932, 28</value>
@@ -165,7 +165,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;button1.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>9</value>
   </data>
   <data name="DebugTextBox.Font" type="System.Drawing.Font, System.Drawing">
     <value>Courier New, 9.75pt, style=Bold</value>
@@ -192,19 +192,19 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;DebugTextBox.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="OpenMEButton.Location" type="System.Drawing.Point, System.Drawing">
     <value>268, 12</value>
   </data>
   <data name="OpenMEButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>250, 60</value>
+    <value>250, 27</value>
   </data>
   <data name="OpenMEButton.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
   <data name="OpenMEButton.Text" xml:space="preserve">
-    <value>Open ME/TXE</value>
+    <value>Change ME/TXE folder</value>
   </data>
   <data name="&gt;&gt;OpenMEButton.Name" xml:space="preserve">
     <value>OpenMEButton</value>
@@ -216,7 +216,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;OpenMEButton.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="MEoffsetLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -246,7 +246,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;MEoffsetLabel.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="SaveButton.Location" type="System.Drawing.Point, System.Drawing">
     <value>524, 12</value>
@@ -270,67 +270,37 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;SaveButton.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
-  <data name="BIOSsizeLabel.AutoSize" type="System.Boolean, mscorlib">
+  <data name="MEsizeInBIOSLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="BIOSsizeLabel.Font" type="System.Drawing.Font, System.Drawing">
+  <data name="MEsizeInBIOSLabel.Font" type="System.Drawing.Font, System.Drawing">
     <value>Courier New, 9.75pt, style=Bold</value>
   </data>
-  <data name="BIOSsizeLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>525, 79</value>
-  </data>
-  <data name="BIOSsizeLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>104, 16</value>
-  </data>
-  <data name="BIOSsizeLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
-  </data>
-  <data name="BIOSsizeLabel.Text" xml:space="preserve">
-    <value>BIOS size: -</value>
-  </data>
-  <data name="&gt;&gt;BIOSsizeLabel.Name" xml:space="preserve">
-    <value>BIOSsizeLabel</value>
-  </data>
-  <data name="&gt;&gt;BIOSsizeLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;BIOSsizeLabel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;BIOSsizeLabel.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="MEsizeLabel.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="MEsizeLabel.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Courier New, 9.75pt, style=Bold</value>
-  </data>
-  <data name="MEsizeLabel.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="MEsizeInBIOSLabel.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 95</value>
   </data>
-  <data name="MEsizeLabel.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="MEsizeInBIOSLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>88, 16</value>
   </data>
-  <data name="MEsizeLabel.TabIndex" type="System.Int32, mscorlib">
+  <data name="MEsizeInBIOSLabel.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
   </data>
-  <data name="MEsizeLabel.Text" xml:space="preserve">
+  <data name="MEsizeInBIOSLabel.Text" xml:space="preserve">
     <value>ME size: -</value>
   </data>
-  <data name="&gt;&gt;MEsizeLabel.Name" xml:space="preserve">
-    <value>MEsizeLabel</value>
+  <data name="&gt;&gt;MEsizeInBIOSLabel.Name" xml:space="preserve">
+    <value>MEsizeInBIOSLabel</value>
   </data>
-  <data name="&gt;&gt;MEsizeLabel.Type" xml:space="preserve">
+  <data name="&gt;&gt;MEsizeInBIOSLabel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;MEsizeLabel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;MEsizeInBIOSLabel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;MEsizeLabel.ZOrder" xml:space="preserve">
-    <value>1</value>
+  <data name="&gt;&gt;MEsizeInBIOSLabel.ZOrder" xml:space="preserve">
+    <value>4</value>
   </data>
   <data name="MEinBIOS_ver_label.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -360,6 +330,91 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;MEinBIOS_ver_label.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="SuitableMEs.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="SuitableMEs.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Courier New, 9.75pt, style=Bold</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="SuitableMEs.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="SuitableMEs.Location" type="System.Drawing.Point, System.Drawing">
+    <value>265, 79</value>
+  </data>
+  <data name="SuitableMEs.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 16</value>
+  </data>
+  <data name="SuitableMEs.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="SuitableMEs.Text" xml:space="preserve">
+    <value>Suitable MEs:</value>
+  </data>
+  <data name="&gt;&gt;SuitableMEs.Name" xml:space="preserve">
+    <value>SuitableMEs</value>
+  </data>
+  <data name="&gt;&gt;SuitableMEs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;SuitableMEs.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;SuitableMEs.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="MEsComboBox.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Courier New, 9.75pt, style=Bold</value>
+  </data>
+  <data name="MEsComboBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>268, 99</value>
+  </data>
+  <data name="MEsComboBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>506, 24</value>
+  </data>
+  <data name="MEsComboBox.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="&gt;&gt;MEsComboBox.Name" xml:space="preserve">
+    <value>MEsComboBox</value>
+  </data>
+  <data name="&gt;&gt;MEsComboBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;MEsComboBox.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;MEsComboBox.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="UpdateDB_Button.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="UpdateDB_Button.Location" type="System.Drawing.Point, System.Drawing">
+    <value>268, 45</value>
+  </data>
+  <data name="UpdateDB_Button.Size" type="System.Drawing.Size, System.Drawing">
+    <value>250, 27</value>
+  </data>
+  <data name="UpdateDB_Button.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="UpdateDB_Button.Text" xml:space="preserve">
+    <value>Update DB</value>
+  </data>
+  <data name="&gt;&gt;UpdateDB_Button.Name" xml:space="preserve">
+    <value>UpdateDB_Button</value>
+  </data>
+  <data name="&gt;&gt;UpdateDB_Button.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;UpdateDB_Button.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;UpdateDB_Button.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -369,7 +424,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>787, 546</value>
+    <value>786, 546</value>
   </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>

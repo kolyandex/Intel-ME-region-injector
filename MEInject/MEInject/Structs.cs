@@ -1,8 +1,26 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace MEInject
 {
+    static class Helper
+    {
+        public static string SafeFileName(this string str)
+        {
+            return str.Substring(str.LastIndexOf(@"\") + 1);
+        }
+    }
+    [Serializable]
+    public struct MEinfo
+    {
+        internal string Path;
+        internal uint Size;
+        internal ushort Major;
+        internal ushort Minor;
+        internal ushort Hotfix;
+        internal ushort Build;
+    }
     class MEFile
     {
         internal FptPreHeader FptPreHeader;
@@ -110,4 +128,6 @@ namespace MEInject
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 12)]
         internal char[] PartitionName;
     }
+
+    
 }

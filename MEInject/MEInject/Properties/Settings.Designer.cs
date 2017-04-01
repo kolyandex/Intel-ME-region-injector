@@ -22,5 +22,17 @@ namespace MEInject.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string MEdir {
+            get {
+                return ((string)(this["MEdir"]));
+            }
+            set {
+                this["MEdir"] = value;
+            }
+        }
     }
 }

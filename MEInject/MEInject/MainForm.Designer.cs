@@ -35,9 +35,11 @@
             this.OpenMEButton = new System.Windows.Forms.Button();
             this.MEoffsetLabel = new System.Windows.Forms.Label();
             this.SaveButton = new System.Windows.Forms.Button();
-            this.BIOSsizeLabel = new System.Windows.Forms.Label();
-            this.MEsizeLabel = new System.Windows.Forms.Label();
+            this.MEsizeInBIOSLabel = new System.Windows.Forms.Label();
             this.MEinBIOS_ver_label = new System.Windows.Forms.Label();
+            this.SuitableMEs = new System.Windows.Forms.Label();
+            this.MEsComboBox = new System.Windows.Forms.ComboBox();
+            this.UpdateDB_Button = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // OpenBIOSButton
@@ -67,7 +69,7 @@
             resources.ApplyResources(this.OpenMEButton, "OpenMEButton");
             this.OpenMEButton.Name = "OpenMEButton";
             this.OpenMEButton.UseVisualStyleBackColor = true;
-            this.OpenMEButton.Click += new System.EventHandler(this.OpenMEButton_Click);
+            this.OpenMEButton.Click += new System.EventHandler(this.ChangeMEFolderButton_Click);
             // 
             // MEoffsetLabel
             // 
@@ -81,28 +83,43 @@
             this.SaveButton.UseVisualStyleBackColor = true;
             this.SaveButton.Click += new System.EventHandler(this.SaveButton_Click);
             // 
-            // BIOSsizeLabel
+            // MEsizeInBIOSLabel
             // 
-            resources.ApplyResources(this.BIOSsizeLabel, "BIOSsizeLabel");
-            this.BIOSsizeLabel.Name = "BIOSsizeLabel";
-            // 
-            // MEsizeLabel
-            // 
-            resources.ApplyResources(this.MEsizeLabel, "MEsizeLabel");
-            this.MEsizeLabel.Name = "MEsizeLabel";
+            resources.ApplyResources(this.MEsizeInBIOSLabel, "MEsizeInBIOSLabel");
+            this.MEsizeInBIOSLabel.Name = "MEsizeInBIOSLabel";
             // 
             // MEinBIOS_ver_label
             // 
             resources.ApplyResources(this.MEinBIOS_ver_label, "MEinBIOS_ver_label");
             this.MEinBIOS_ver_label.Name = "MEinBIOS_ver_label";
             // 
+            // SuitableMEs
+            // 
+            resources.ApplyResources(this.SuitableMEs, "SuitableMEs");
+            this.SuitableMEs.Name = "SuitableMEs";
+            // 
+            // MEsComboBox
+            // 
+            resources.ApplyResources(this.MEsComboBox, "MEsComboBox");
+            this.MEsComboBox.FormattingEnabled = true;
+            this.MEsComboBox.Name = "MEsComboBox";
+            // 
+            // UpdateDB_Button
+            // 
+            resources.ApplyResources(this.UpdateDB_Button, "UpdateDB_Button");
+            this.UpdateDB_Button.Name = "UpdateDB_Button";
+            this.UpdateDB_Button.UseVisualStyleBackColor = true;
+            this.UpdateDB_Button.Click += new System.EventHandler(this.UpdateDB_Button_Click);
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.UpdateDB_Button);
+            this.Controls.Add(this.MEsComboBox);
+            this.Controls.Add(this.SuitableMEs);
             this.Controls.Add(this.MEinBIOS_ver_label);
-            this.Controls.Add(this.MEsizeLabel);
-            this.Controls.Add(this.BIOSsizeLabel);
+            this.Controls.Add(this.MEsizeInBIOSLabel);
             this.Controls.Add(this.SaveButton);
             this.Controls.Add(this.MEoffsetLabel);
             this.Controls.Add(this.OpenMEButton);
@@ -111,6 +128,8 @@
             this.Controls.Add(this.OpenBIOSButton);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "MainForm";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
+            this.Load += new System.EventHandler(this.MainForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -123,9 +142,11 @@
         private System.Windows.Forms.Button OpenMEButton;
         private System.Windows.Forms.Label MEoffsetLabel;
         private System.Windows.Forms.Button SaveButton;
-        private System.Windows.Forms.Label BIOSsizeLabel;
-        private System.Windows.Forms.Label MEsizeLabel;
+        private System.Windows.Forms.Label MEsizeInBIOSLabel;
         private System.Windows.Forms.Label MEinBIOS_ver_label;
+        private System.Windows.Forms.Label SuitableMEs;
+        private System.Windows.Forms.ComboBox MEsComboBox;
+        private System.Windows.Forms.Button UpdateDB_Button;
     }
 }
 
