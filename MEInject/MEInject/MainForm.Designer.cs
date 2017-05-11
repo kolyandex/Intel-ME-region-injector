@@ -40,6 +40,7 @@
             this.SuitableMEs = new System.Windows.Forms.Label();
             this.MEsComboBox = new System.Windows.Forms.ComboBox();
             this.UpdateDB_Button = new System.Windows.Forms.Button();
+            this.MinorVer_checkBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // OpenBIOSButton
@@ -111,10 +112,20 @@
             this.UpdateDB_Button.UseVisualStyleBackColor = true;
             this.UpdateDB_Button.Click += new System.EventHandler(this.UpdateDB_Button_Click);
             // 
+            // MinorVer_checkBox
+            // 
+            resources.ApplyResources(this.MinorVer_checkBox, "MinorVer_checkBox");
+            this.MinorVer_checkBox.Checked = true;
+            this.MinorVer_checkBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.MinorVer_checkBox.Name = "MinorVer_checkBox";
+            this.MinorVer_checkBox.UseVisualStyleBackColor = true;
+            this.MinorVer_checkBox.CheckedChanged += new System.EventHandler(this.MinorVer_checkBox_CheckedChanged);
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.MinorVer_checkBox);
             this.Controls.Add(this.UpdateDB_Button);
             this.Controls.Add(this.MEsComboBox);
             this.Controls.Add(this.SuitableMEs);
@@ -147,6 +158,7 @@
         private System.Windows.Forms.Label SuitableMEs;
         private System.Windows.Forms.ComboBox MEsComboBox;
         private System.Windows.Forms.Button UpdateDB_Button;
+        private System.Windows.Forms.CheckBox MinorVer_checkBox;
     }
 }
 

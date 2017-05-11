@@ -252,12 +252,13 @@ namespace MEInject
                     MEsizeInBIOSLabel.Text = _mode + " size: " + (BIOS_ME_end_offset - BIOS_ME_start_offset) + " bytes";
                     SuitableMEs.Text = "Suitable " + _mode + "s:";
                     Log("Mode: " + _mode);
+                    UpdateComboBox();
                     //Log(MEinBIOS_ver_label.Text);
-                    MEsComboBox.Items.Clear();
+                    /*MEsComboBox.Items.Clear();
                     _validMEfiles.Clear();
                     foreach (var mefile in _meFiles)
                     {
-                        if (BIOS_ME_info.Major == mefile.Major && BIOS_ME_info.Minor == mefile.Minor &&
+                        if (BIOS_ME_info.Major == mefile.Major && (BIOS_ME_info.Minor == mefile.Minor || !MinorVer_checkBox.Checked)  &&
                             BIOS_ME_end_offset - BIOS_ME_start_offset >= mefile.Size)
                         {
                             MEsComboBox.Items.Add(mefile.Major + "." + mefile.Minor + "." + mefile.Hotfix + "." + mefile.Build + " - " + mefile.Path.SafeFileName());
@@ -265,7 +266,7 @@ namespace MEInject
                         }
                     }
                     if (MEsComboBox.Items.Count == 0) MEsComboBox.Items.Add("--none--");
-                    MEsComboBox.SelectedIndex = 0;
+                    MEsComboBox.SelectedIndex = 0;*/
                 }
                 stream.Close();
                 return;
@@ -274,6 +275,23 @@ namespace MEInject
             ClearFields();
             BIOSfile = null;
             throw new Exception("Invalid input file " + path.SafeFileName());
+        }
+
+        void UpdateComboBox()
+        {
+            MEsComboBox.Items.Clear();
+            _validMEfiles.Clear();
+            foreach (var mefile in _meFiles)
+            {
+                if (BIOS_ME_info.Major == mefile.Major && (BIOS_ME_info.Minor == mefile.Minor || !MinorVer_checkBox.Checked) &&
+                    BIOS_ME_end_offset - BIOS_ME_start_offset >= mefile.Size)
+                {
+                    MEsComboBox.Items.Add(mefile.Major + "." + mefile.Minor + "." + mefile.Hotfix + "." + mefile.Build + " - " + mefile.Path.SafeFileName());
+                    _validMEfiles.Add(mefile.Path);
+                }
+            }
+            if (MEsComboBox.Items.Count == 0) MEsComboBox.Items.Add("--none--");
+            MEsComboBox.SelectedIndex = 0;
         }
 
         private void OpenBIOSbutton_Click(object sender, EventArgs e)
@@ -416,6 +434,11 @@ namespace MEInject
         private void UpdateDB_Button_Click(object sender, EventArgs e)
         {
             UpdateDB();
+        }
+
+        private void MinorVer_checkBox_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateComboBox();
         }
     }
 }
