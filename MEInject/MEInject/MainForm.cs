@@ -324,7 +324,7 @@ namespace MEInject
             {
                 AddExtension = true,
                 DefaultExt = "bin",
-                FileName = BIOSfilename.Replace(".bin", string.Empty) + " + " + _validMEfiles[MEsComboBox.SelectedIndex]
+                FileName = BIOSfilename.Replace(".bin", string.Empty) + " + " + _mode + " " + MEsComboBox.Text
             };
 
             if (sfd.ShowDialog() != DialogResult.OK) return;
