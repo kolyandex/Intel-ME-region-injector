@@ -42,7 +42,7 @@ namespace MEInject
         internal uint ROMB_Instr_0;
         internal uint ROMB_Instr_1;
         internal uint ROMB_Instr_2;
-        internal uint ROMB_Instr_3; 
+        internal uint ROMB_Instr_3;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -129,5 +129,11 @@ namespace MEInject
         internal char[] PartitionName;
     }
 
-    
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    struct MSDM
+    {
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 29)]
+        internal char[] WinKey;
+    }
 }
+

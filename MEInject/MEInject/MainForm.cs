@@ -28,6 +28,15 @@ namespace MEInject
         //private static byte _diff = 0x10;
         private Mode _mode;
 
+        private byte[] MSDM_table_pattern =
+        {
+            0x01, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x01, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x1D, 0x00, 0x00, 0x00
+        };
+        private byte MSDM_offset = 0x14;
+
         enum Mode
         {
             ME,
@@ -49,6 +58,7 @@ namespace MEInject
             MEsComboBox.Items.Clear();
             MEsComboBox.Text = string.Empty;
             _validMEfiles.Clear();
+            WinKeyTextBox.Text = "-";
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -267,6 +277,21 @@ namespace MEInject
                     }
                     if (MEsComboBox.Items.Count == 0) MEsComboBox.Items.Add("--none--");
                     MEsComboBox.SelectedIndex = 0;*/
+                    //GetMSDM();
+                    
+                    var offset = Find(BIOSfile, MSDM_table_pattern) + MSDM_offset;
+                    if (offset - MSDM_offset != -1)
+                    {
+                        stream.Seek(offset, SeekOrigin.Begin);
+                        var handle = GCHandle.Alloc(new BinaryReader(stream).ReadBytes(Marshal.SizeOf(typeof(MSDM))), GCHandleType.Pinned);
+                        var MSDM = (MSDM)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(MSDM));
+                        handle.Free();
+                        WinKeyTextBox.Text = new string(MSDM.WinKey);
+                    }
+                    else
+                    {
+                        WinKeyTextBox.Text = "none";
+                    }
                 }
                 stream.Close();
                 return;
@@ -276,6 +301,11 @@ namespace MEInject
             BIOSfile = null;
             throw new Exception("Invalid input file " + path.SafeFileName());
         }
+
+        //void GetMSDM()
+        //{
+           
+        //}
 
         void UpdateComboBox()
         {
