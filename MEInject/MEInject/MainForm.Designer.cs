@@ -61,6 +61,7 @@
             // 
             // DebugTextBox
             // 
+            this.DebugTextBox.BackColor = System.Drawing.SystemColors.Window;
             this.DebugTextBox.Cursor = System.Windows.Forms.Cursors.Default;
             resources.ApplyResources(this.DebugTextBox, "DebugTextBox");
             this.DebugTextBox.Name = "DebugTextBox";

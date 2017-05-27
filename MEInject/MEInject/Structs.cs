@@ -1,15 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace MEInject
 {
+    internal enum LogLevel
+    {
+        Info,
+        Warning,
+        Error,
+        Critical,
+        Default
+    }
+    public static class RichTextBoxExtensions
+    {
+        public static void AppendText(this RichTextBox box, string text, Color color)
+        {
+            box.SelectionStart = box.TextLength;
+            box.SelectionLength = 0;
+
+            box.SelectionColor = color;
+            box.AppendText(text + "\n");
+            box.SelectionColor = box.ForeColor;
+        }
+    }
     static class Helper
     {
         public static string SafeFileName(this string str)
         {
             return str.Substring(str.LastIndexOf(@"\") + 1);
         }
+
+        
     }
     [Serializable]
     public struct MEinfo

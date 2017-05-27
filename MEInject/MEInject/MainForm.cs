@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+// ReSharper disable InconsistentNaming
 
 namespace MEInject
 {
@@ -50,25 +52,36 @@ namespace MEInject
             InitializeComponent();
         }
 
-        void ClearFields()
+        private void ClearGUI()
         {
-            MEoffsetLabel.Text = "ME offset in BIOS: -";
-            MEsizeInBIOSLabel.Text = "ME size: -";
-            MEinBIOS_ver_label.Text = "ME version: -";
+            MEoffsetLabel.Text = @"ME offset in BIOS: -";
+            MEsizeInBIOSLabel.Text = @"ME size: -";
+            MEinBIOS_ver_label.Text = @"ME version: -";
             MEsComboBox.Items.Clear();
             MEsComboBox.Text = string.Empty;
             _validMEfiles.Clear();
-            WinKeyTextBox.Text = "-";
+            WinKeyTextBox.Text = @"-";
+        }
+
+        private void UpdateGUI()
+        {
+            MEinBIOS_ver_label.Text = $@"{_mode} version: {BIOS_ME_info.Major}.{BIOS_ME_info.Minor}.{BIOS_ME_info.Hotfix}.{BIOS_ME_info.Build}";
+            MEoffsetLabel.Text = $@"{_mode} offset in BIOS: 0x{BIOS_ME_start_offset:X8}";
+            MEsizeInBIOSLabel.Text = $@"{_mode} size: {BIOS_ME_end_offset - BIOS_ME_start_offset} bytes";
+            SuitableMEs.Text = $@"Suitable {_mode}s:";
+            if (_MEdir != string.Empty) Text = $@"Intel ME/TXE injector - {_MEdir} - {_meFiles.Count} files";
         }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            UpdateGUI();
             _validMEfiles = new List<string>();
             _MEdir = Properties.Settings.Default.MEdir;
             LoadDB();
-            if (_MEdir != string.Empty) Text = "Intel ME/TXE injector - " + _MEdir + " - " + _meFiles.Count + " files";
-            Log("Ready!");
+            UpdateGUI();
+            Log("Ready!", LogLevel.Info);
             MEsComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            MaximizeBox = false;
 
         }
 
@@ -79,7 +92,7 @@ namespace MEInject
             Properties.Settings.Default.Save();
         }
 
-        void UpdateDB()
+        private void UpdateDB()
         {
             var files = GetFileNames(_MEdir);
             _meFiles.Clear();
@@ -91,14 +104,14 @@ namespace MEInject
                 }
                 catch (Exception ex)
                 {
-                    //Log(ex.Message);
+                    Log(ex.Message, LogLevel.Warning);
                 }
             }
             SaveDB();
-            Text = "Intel ME/TXE injector - " + _MEdir + " - " + _meFiles.Count + " files";
+            UpdateGUI();
         }
 
-        void SaveDB()
+        private void SaveDB()
         {
             using (Stream writer = new FileStream(_dbFile, FileMode.Create))
             {
@@ -110,7 +123,7 @@ namespace MEInject
         {
             if (_MEdir == string.Empty)
             {
-                MessageBox.Show("Please, specify ME files folder first");
+                MessageBox.Show(@"Please, specify ME files folder first");
                 var fbd = new FolderBrowserDialog();
                 if (fbd.ShowDialog() != DialogResult.OK)
                 {
@@ -127,7 +140,6 @@ namespace MEInject
             {
 
                 UpdateDB();
-                Text = "Intel ME/TXE injector - " + _MEdir + " - " + _meFiles.Count + " files";
                 return;
             }
 
@@ -143,11 +155,11 @@ namespace MEInject
 
             catch (Exception exception)
             {
-                Log(exception.Message + "");
+                Log(exception.Message, LogLevel.Error);
             }
         }
 
-        MEinfo GetMEFileInfo(Stream stream, string path, uint startoffset = 0, uint endoffset = 0)
+        private MEinfo GetMEFileInfo(Stream stream, string path, uint startoffset = 0, uint endoffset = 0)
         {
             stream.Seek(startoffset, SeekOrigin.Begin);
             var meinfo = new MEinfo();
@@ -177,7 +189,7 @@ namespace MEInject
                 mn2Manifests.Add((Mn2Manifest)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(Mn2Manifest)));
                 handle.Free();
             }
-
+            if (mn2Manifests.Count < 1) throw new Exception($@"Unsupported ME version: {path.SafeFileName()}");
             var manifest = mn2Manifests.First();
 
             meinfo.Size = endoffset == 0 ? (uint)stream.Length : endoffset - startoffset;
@@ -192,23 +204,31 @@ namespace MEInject
         private MEinfo LoadMEinfo(string path)
         {
             var stream = File.Open(path, FileMode.Open);
+            if (stream.Length < 1024 * 100)
+            {
+                stream.Close();
+                throw new Exception($"Too small file size: {path.SafeFileName()}");
+            }
+
             stream.Seek(0x10, SeekOrigin.Begin);
 
             var magic = new BinaryReader(stream).ReadBytes(4);
 
             if (magic.SequenceEqual(new byte[] { 0x24, 0x46, 0x50, 0x54 })) // $FPT - ME file
             {
-                Log("ME file added " + path.SafeFileName());
                 var meinfo = GetMEFileInfo(stream, path);
+                Log($"ME file added {path.SafeFileName()}", LogLevel.Info);
                 stream.Close();
                 return meinfo;
             }
             stream.Close();
-            throw new Exception("Invalid input file " + path.SafeFileName());
+            throw new Exception($"Invalid input file: {path.SafeFileName()}");
         }
 
         private void LoadBIOS(string path)
         {
+
+            Log("----------------------------------------", LogLevel.Default);
             BIOSfile = File.ReadAllBytes(path);
             var stream = File.Open(path, FileMode.Open);
             stream.Seek(0x10, SeekOrigin.Begin);
@@ -225,7 +245,7 @@ namespace MEInject
                 //var fmba = (flmap1 & 0xff) << 4;
                 if (nr >= 2)
                 {
-                    //Log("BIOS image detected");
+                    Log("Intel BIOS image detected! :D", LogLevel.Info);
                     stream.Seek(frba, SeekOrigin.Begin);
                     //FLREG0 = Flash Descriptor
                     //FLREG1 = BIOS
@@ -247,38 +267,16 @@ namespace MEInject
                     {
                         throw new Exception("The ME/TXE region is corrupted or missing");
                     }
-                    Log("BIOS read successful! " + path.SafeFileName());
-                    //Log(path);
-                    //Log(string.Format("The ME/TXE region goes from {0:X8} to {1:X8}", BIOS_ME_start_offset, BIOS_ME_end_offset));
-
-
-
                     BIOS_ME_info = GetMEFileInfo(stream, path, BIOS_ME_start_offset, BIOS_ME_end_offset);
 
                     _mode = BIOS_ME_info.Major < 3 ? Mode.TXE : Mode.ME;
-                    MEinBIOS_ver_label.Text = _mode + " version: " + BIOS_ME_info.Major + "." + BIOS_ME_info.Minor + "." +
-                                              BIOS_ME_info.Hotfix + "." + BIOS_ME_info.Build;
-                    MEoffsetLabel.Text = _mode + " offset in BIOS: 0x" + BIOS_ME_start_offset.ToString("X8");
-                    MEsizeInBIOSLabel.Text = _mode + " size: " + (BIOS_ME_end_offset - BIOS_ME_start_offset) + " bytes";
-                    SuitableMEs.Text = "Suitable " + _mode + "s:";
-                    Log("Mode: " + _mode);
-                    UpdateComboBox();
-                    //Log(MEinBIOS_ver_label.Text);
-                    /*MEsComboBox.Items.Clear();
-                    _validMEfiles.Clear();
-                    foreach (var mefile in _meFiles)
-                    {
-                        if (BIOS_ME_info.Major == mefile.Major && (BIOS_ME_info.Minor == mefile.Minor || !MinorVer_checkBox.Checked)  &&
-                            BIOS_ME_end_offset - BIOS_ME_start_offset >= mefile.Size)
-                        {
-                            MEsComboBox.Items.Add(mefile.Major + "." + mefile.Minor + "." + mefile.Hotfix + "." + mefile.Build + " - " + mefile.Path.SafeFileName());
-                            _validMEfiles.Add(mefile.Path);
-                        }
-                    }
-                    if (MEsComboBox.Items.Count == 0) MEsComboBox.Items.Add("--none--");
-                    MEsComboBox.SelectedIndex = 0;*/
-                    //GetMSDM();
+                    UpdateGUI();
+
+                    Log("BIOS read successful! " + path.SafeFileName(), LogLevel.Info);
+                    Log($"The {_mode} region goes from {BIOS_ME_start_offset:X8} to {BIOS_ME_end_offset:X8}", LogLevel.Info);
                     
+                    UpdateComboBox();
+
                     var offset = Find(BIOSfile, MSDM_table_pattern) + MSDM_offset;
                     if (offset - MSDM_offset != -1)
                     {
@@ -290,22 +288,19 @@ namespace MEInject
                     }
                     else
                     {
-                        WinKeyTextBox.Text = "none";
+                        WinKeyTextBox.Text = @"none";
                     }
+                    stream.Close();
+                    return;
                 }
                 stream.Close();
-                return;
+                throw new Exception("Number of partitions in file is less than 2! " + path.SafeFileName());
             }
             stream.Close();
-            ClearFields();
+            ClearGUI();
             BIOSfile = null;
             throw new Exception("Invalid input file " + path.SafeFileName());
         }
-
-        //void GetMSDM()
-        //{
-           
-        //}
 
         void UpdateComboBox()
         {
@@ -316,7 +311,7 @@ namespace MEInject
                 if (BIOS_ME_info.Major == mefile.Major && (BIOS_ME_info.Minor == mefile.Minor || !MinorVer_checkBox.Checked) &&
                     BIOS_ME_end_offset - BIOS_ME_start_offset >= mefile.Size)
                 {
-                    MEsComboBox.Items.Add(mefile.Major + "." + mefile.Minor + "." + mefile.Hotfix + "." + mefile.Build + " - " + mefile.Path.SafeFileName());
+                    MEsComboBox.Items.Add($@"{mefile.Major}.{mefile.Minor}.{mefile.Hotfix}.{mefile.Build} - {mefile.Path.SafeFileName()}");
                     _validMEfiles.Add(mefile.Path);
                 }
             }
@@ -335,14 +330,14 @@ namespace MEInject
             }
             catch (Exception exception)
             {
-                Log(exception.Message);
+                Log(exception.Message, LogLevel.Error);
             }
         }
         private void SaveButton_Click(object sender, EventArgs e)
         {
             if (BIOSfile == null || _validMEfiles.Count == 0)
             {
-                Log("Nothing to save :(");
+                Log("Nothing to save :(", LogLevel.Warning);
                 return;
             }
             MEfile = File.ReadAllBytes(_validMEfiles[MEsComboBox.SelectedIndex]);
@@ -354,18 +349,18 @@ namespace MEInject
             {
                 AddExtension = true,
                 DefaultExt = "bin",
-                FileName = BIOSfilename.Replace(".bin", string.Empty) + " + " + _mode + " " + MEsComboBox.Text
+                FileName = $@"{BIOSfilename.Replace(".bin", string.Empty)} + {_mode} {MEsComboBox.Text}"
             };
 
             if (sfd.ShowDialog() != DialogResult.OK) return;
             try
             {
                 File.WriteAllBytes(sfd.FileName, BIOSfile);
-                Log("Saved to " + sfd.FileName);
+                Log("Saved to " + sfd.FileName, LogLevel.Info);
             }
             catch (Exception exception)
             {
-                Log(exception.Message);
+                Log(exception.Message, LogLevel.Error);
             }
         }
         static int Find(IList<byte> array, IList<byte> mask)
@@ -395,7 +390,7 @@ namespace MEInject
 
 
         private readonly List<string> _filesList = new List<string>();
-        private List<string> GetFileNames(string path)
+        private IEnumerable<string> GetFileNames(string path)
         {
             _filesList.Clear();
             FileFinder(path);
@@ -416,7 +411,7 @@ namespace MEInject
             }
             catch (Exception exception)
             {
-                Log(exception.Message + " " + path);
+                Log(exception.Message + " " + path, LogLevel.Warning);
             }
         }
 
@@ -424,25 +419,34 @@ namespace MEInject
 
         private void button1_Click(object sender, EventArgs e)
         {
-            return;
-            LoadDB();
-            return;
-            foreach (var file in GetFileNames(@"C:\Users\Nick\Google Диск\BIOS\"))
-            {
-                try
-                {
-                    // LoadFile(file);
-                }
-                catch (Exception exception)
-                {
-                    //Log(exception.Message);
-                }
-                //Log(file);
-            }
+
         }
-        private void Log(string message)
+        private void Log(string message, LogLevel level)
         {
-            DebugTextBox.Text += /*DateTime.Now + " - " + */message + "\n";
+            Color color;
+            switch (level)
+            {
+                case LogLevel.Info:
+                    color = Color.Green;
+                    break;
+                case LogLevel.Warning:
+                    return;
+                    color = Color.DarkOrange;
+                    break;
+                case LogLevel.Error:
+                    color = Color.Red;
+                    break;
+                case LogLevel.Critical:
+                    color = Color.Brown;
+                    break;
+                case LogLevel.Default:
+                    color = Color.Black;
+                    break;
+                default:
+                    color = Color.Black;
+                    break;
+            }
+            DebugTextBox.AppendText(message, color);
         }
         private void DebugTextBox_TextChanged(object sender, EventArgs e)
         {
@@ -458,7 +462,7 @@ namespace MEInject
             Properties.Settings.Default.MEdir = _MEdir;
             Properties.Settings.Default.Save();
             UpdateDB();
-            Text = "Intel ME/TXE injector - " + _MEdir + " - " + _meFiles.Count + " files";
+            UpdateGUI();
         }
 
         private void UpdateDB_Button_Click(object sender, EventArgs e)
