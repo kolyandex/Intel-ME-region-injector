@@ -43,6 +43,7 @@
             this.MinorVer_checkBox = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
             this.WinKeyTextBox = new System.Windows.Forms.TextBox();
+            this.ExtractButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // OpenBIOSButton
@@ -134,10 +135,18 @@
             resources.ApplyResources(this.WinKeyTextBox, "WinKeyTextBox");
             this.WinKeyTextBox.Name = "WinKeyTextBox";
             // 
+            // ExtractButton
+            // 
+            resources.ApplyResources(this.ExtractButton, "ExtractButton");
+            this.ExtractButton.Name = "ExtractButton";
+            this.ExtractButton.UseVisualStyleBackColor = true;
+            this.ExtractButton.Click += new System.EventHandler(this.ExtractButton_Click);
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.ExtractButton);
             this.Controls.Add(this.WinKeyTextBox);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.MinorVer_checkBox);
@@ -176,6 +185,7 @@
         private System.Windows.Forms.CheckBox MinorVer_checkBox;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox WinKeyTextBox;
+        private System.Windows.Forms.Button ExtractButton;
     }
 }
 

@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 // ReSharper disable InconsistentNaming
@@ -301,7 +302,40 @@ namespace MEInject
             BIOSfile = null;
             throw new Exception("Invalid input file " + path.SafeFileName());
         }
+        private void ExtractButton_Click(object sender, EventArgs e)
+        {
+            if (BIOSfile == null)
+            {
+                Log("Nothing to save :(", LogLevel.Warning);
+                return;
+            }
+            var sfd = new SaveFileDialog
+            {
+                AddExtension = true,
+                DefaultExt = "bin",
+                FileName = _mode + " from bios " + BIOSfilename
+            };
 
+            if (sfd.ShowDialog() != DialogResult.OK) return;
+            
+            try
+            {
+                var me = new byte[BIOS_ME_end_offset - BIOS_ME_start_offset];
+                Array.Copy(BIOSfile, BIOS_ME_start_offset, me, 0, BIOS_ME_end_offset - BIOS_ME_start_offset);
+                var _me = new List<byte>(me);
+                for (int i = _me.Count - 1; i >= 0; i--)
+                {
+                    if (_me[i] == 0xFF) _me.RemoveAt(i);
+                    else break;
+                }
+                File.WriteAllBytes(sfd.FileName, _me.ToArray());
+                Log("Saved to " + sfd.FileName, LogLevel.Info);
+            }
+            catch (Exception exception)
+            {
+                Log(exception.Message, LogLevel.Error);
+            }
+        }
         void UpdateComboBox()
         {
             MEsComboBox.Items.Clear();
@@ -341,15 +375,21 @@ namespace MEInject
                 return;
             }
             MEfile = File.ReadAllBytes(_validMEfiles[MEsComboBox.SelectedIndex]);
-
-
-            for (var i = 0; i < MEfile.Length; i++) BIOSfile[i + BIOS_ME_start_offset] = MEfile[i];
-
+            
+            for (var i = 0; i < BIOS_ME_end_offset - BIOS_ME_start_offset; i++)
+            {
+                if (i < MEfile.Length)
+                {
+                    BIOSfile[i + BIOS_ME_start_offset] = MEfile[i];
+                    continue;
+                }                
+                BIOSfile[i + BIOS_ME_start_offset] = (byte)0xFF;
+            }
             var sfd = new SaveFileDialog
             {
                 AddExtension = true,
                 DefaultExt = "bin",
-                FileName = $@"{BIOSfilename.Replace(".bin", string.Empty)} + {_mode} {MEsComboBox.Text}"
+                FileName = $@"{Regex.Replace(BIOSfilename, ".bin", string.Empty, RegexOptions.IgnoreCase)} + {_mode} {MEsComboBox.Text}" // $@"{BIOSfilename.Replace(".bin", string.Empty)} + {_mode} {MEsComboBox.Text}"
             };
 
             if (sfd.ShowDialog() != DialogResult.OK) return;
@@ -430,7 +470,6 @@ namespace MEInject
                     color = Color.Green;
                     break;
                 case LogLevel.Warning:
-                    return;
                     color = Color.DarkOrange;
                     break;
                 case LogLevel.Error:
@@ -474,5 +513,7 @@ namespace MEInject
         {
             UpdateComboBox();
         }
+
+        
     }
 }
