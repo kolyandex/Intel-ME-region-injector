@@ -514,6 +514,27 @@ namespace MEInject
             UpdateComboBox();
         }
 
-        
+        private void MainForm_DragDrop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                
+                try
+                {
+                    LoadBIOS(files[0]);
+                    BIOSfilename = files[0].SafeFileName();
+                }
+                catch (Exception exception)
+                {
+                    Log(exception.Message, LogLevel.Error);
+                }
+            }
+        }
+
+        private void MainForm_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy;
+        }
     }
 }
