@@ -44,6 +44,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.WinKeyTextBox = new System.Windows.Forms.TextBox();
             this.ExtractButton = new System.Windows.Forms.Button();
+            this.About_button = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // OpenBIOSButton
@@ -142,11 +143,20 @@
             this.ExtractButton.UseVisualStyleBackColor = true;
             this.ExtractButton.Click += new System.EventHandler(this.ExtractButton_Click);
             // 
+            // About_button
+            // 
+            this.About_button.Cursor = System.Windows.Forms.Cursors.Default;
+            resources.ApplyResources(this.About_button, "About_button");
+            this.About_button.Name = "About_button";
+            this.About_button.UseVisualStyleBackColor = true;
+            this.About_button.Click += new System.EventHandler(this.About_button_Click);
+            // 
             // MainForm
             // 
             this.AllowDrop = true;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.About_button);
             this.Controls.Add(this.ExtractButton);
             this.Controls.Add(this.WinKeyTextBox);
             this.Controls.Add(this.label1);
@@ -189,6 +199,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox WinKeyTextBox;
         private System.Windows.Forms.Button ExtractButton;
+        private System.Windows.Forms.Button About_button;
     }
 }
 

@@ -551,5 +551,17 @@ namespace MEInject
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy;
         }
+
+        private void About_button_Click(object sender, EventArgs e)
+        {
+            Log("kolyandex, 2018", LogLevel.Info);
+            Log("Novosibirsk, Russia", LogLevel.Info);
+            Log("For beer and chips:", LogLevel.Info);
+            Log("eth: 0x535706fb56db4cb493fc3ffeb67f69a503755e26", LogLevel.Info);
+            Log("zcash: t1VueM9xdtoaoRqQeX7q98iRnRvZ97QxuzV", LogLevel.Info);
+            Log("btc: 3Hv1xdfPVpwfDTe92Bu6LcbTG7Xi1KnDpm", LogLevel.Info);
+            Log("ltc: LfXr5XaDsaQjJQEXcuuvZazPdy2zC6exXH", LogLevel.Info);
+
+        }
     }
 }
