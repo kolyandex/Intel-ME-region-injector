@@ -179,13 +179,23 @@ namespace MEInject
                 handle = GCHandle.Alloc(new BinaryReader(stream).ReadBytes(Marshal.SizeOf(typeof(FptEntry))), GCHandleType.Pinned);
                 var fptEntry = (FptEntry)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(FptEntry));
                 handle.Free();
+                
                 fptEntries.Add(fptEntry);
             }
 
             var mn2Manifests = new List<Mn2Manifest>();
-            foreach (var fptEntry in fptEntries.Where(fptEntry => (fptEntry.Flags & 0x00FF) == 0x80))
+            //foreach (var fptEntry in fptEntries.Where(fptEntry => (fptEntry.Flags & 0x00FF) == 0x80))
+            foreach (var fptEntry in fptEntries.Where(fptEntry => (new string(fptEntry.Name) == "FTPR")))
             {
                 stream.Seek(fptEntry.Offset + startoffset, SeekOrigin.Begin);
+                
+                var o = 0;
+                if (new string(new BinaryReader(stream).ReadChars(4)) == "$CPD")
+                {
+                    o = new BinaryReader(stream).ReadByte() * 0x18 + 0x10;
+                }
+                stream.Seek(fptEntry.Offset + startoffset + o, SeekOrigin.Begin);
+
                 handle = GCHandle.Alloc(new BinaryReader(stream).ReadBytes(Marshal.SizeOf(typeof(Mn2Manifest))), GCHandleType.Pinned);
                 mn2Manifests.Add((Mn2Manifest)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(Mn2Manifest)));
                 handle.Free();
@@ -244,7 +254,7 @@ namespace MEInject
                 var nr = flmap0 >> 24 & 0x7;
                 var frba = flmap0 >> 12 & 0xff0;
                 //var fmba = (flmap1 & 0xff) << 4;
-                if (nr >= 2)
+                if (nr >= 2 || true)
                 {
                     Log("Intel BIOS image detected! :D", LogLevel.Info);
                     stream.Seek(frba, SeekOrigin.Begin);
@@ -268,14 +278,16 @@ namespace MEInject
                     {
                         throw new Exception("The ME/TXE region is corrupted or missing");
                     }
+                                       
+
                     BIOS_ME_info = GetMEFileInfo(stream, path, BIOS_ME_start_offset, BIOS_ME_end_offset);
 
-                    _mode = BIOS_ME_info.Major < 3 ? Mode.TXE : Mode.ME;
+                    _mode = BIOS_ME_info.Major < 4 ? Mode.TXE : Mode.ME;
                     UpdateGUI();
 
                     Log("BIOS read successful! " + path.SafeFileName(), LogLevel.Info);
                     Log($"The {_mode} region goes from {BIOS_ME_start_offset:X8} to {BIOS_ME_end_offset:X8}", LogLevel.Info);
-                    
+
                     UpdateComboBox();
 
                     var offset = Find(BIOSfile, MSDM_table_pattern) + MSDM_offset;
@@ -294,6 +306,9 @@ namespace MEInject
                     stream.Close();
                     return;
                 }
+
+                MessageBox.Show(flmap0 + " " + flmap1);
+
                 stream.Close();
                 throw new Exception("Number of partitions in file is less than 2! " + path.SafeFileName());
             }
@@ -317,7 +332,7 @@ namespace MEInject
             };
 
             if (sfd.ShowDialog() != DialogResult.OK) return;
-            
+
             try
             {
                 var me = new byte[BIOS_ME_end_offset - BIOS_ME_start_offset];
@@ -375,14 +390,14 @@ namespace MEInject
                 return;
             }
             MEfile = File.ReadAllBytes(_validMEfiles[MEsComboBox.SelectedIndex]);
-            
+
             for (var i = 0; i < BIOS_ME_end_offset - BIOS_ME_start_offset; i++)
             {
                 if (i < MEfile.Length)
                 {
                     BIOSfile[i + BIOS_ME_start_offset] = MEfile[i];
                     continue;
-                }                
+                }
                 BIOSfile[i + BIOS_ME_start_offset] = (byte)0xFF;
             }
             var sfd = new SaveFileDialog
@@ -519,7 +534,7 @@ namespace MEInject
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                
+
                 try
                 {
                     LoadBIOS(files[0]);
